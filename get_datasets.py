@@ -4,6 +4,7 @@ import os
 
 import openml
 import numpy as np
+import scipy
 import pandas as pd
 from tqdm import tqdm
 
@@ -22,6 +23,9 @@ def _save_dataset_data(d_id):
     X, y, col_types, col_names = d.get_data(target=d.default_target_attribute,
                                             return_categorical_indicator=True,
                                             return_attribute_names=True)
+    if scipy.sparse.issparse(X):
+        X = X.todense() # convert sparse matrix to dense
+
     # Build data df
     df_dict = {n: X[:, i] for i, n in enumerate(col_names)}
     df_dict['target'] = y
@@ -36,7 +40,7 @@ def _save_dataset_data(d_id):
     df.to_csv('./datasets/{0}.csv'.format(d.dataset_id), index=False)
     types_df.to_csv('./datasets/{0}_types.csv'.format(d.dataset_id), index=False)
 
-    classes = np.unique(df['target'].values.ravel())
+    classes = np.unique(df['target'].values.ravel()).size
     return (d_id, d.name, df.shape[0], df.shape[1], classes)
 
 
