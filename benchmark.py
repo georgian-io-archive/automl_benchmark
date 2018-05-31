@@ -153,17 +153,29 @@ def process(m_name, d_id, m_type, seed):
         fopen.write('{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}\n'.format(m_name, d_id, m_type, seed, rmse, 
             r2_score, log_loss, f1_score))
 
+def load_datasets():
+    cinfo_df = pd.read_csv('./datasets/study_classification_info.csv')
+    rinfo_df = pd.read_csv('./datasets/study_regression_info.csv')
+
+    datasets = np.vstack((np.array([[d_id, 'classification'] for d_id in cinfo_df['DATASET_ID'].values]), 
+                          np.array([[d_id, 'regression'] for d_id in rinfo_df['DATASET_ID'].values])))
+
+    return datasets
+
+def generate_tests():
+    """Generates test data for benchmarking"""
+
+    np.random.seed(1400)
+    seeds = list(map(int, list(np.random.randint(1000, size=10)))) # Generate 10 random 'seeds'
+    datasets = load_datasets().tolist()
+    models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
+
+    return [ [i,j[0,j[1],k] for i in models for j in datasets for k in seeds] 
 
 def benchmark():
     """Main function to benchmark each function"""
 
-    cinfo_df = pd.read_csv('./datasets/study_classification_info.csv')
-    rinfo_df = pd.read_csv('./datasets/study_regression_info.csv')
-
-    np.random.seed(1400)
-    seeds = list(map(int, list(np.random.randint(1000, size=10)))) # Generate 10 random 'seeds'
-    datasets = np.vstack((np.array([[d_id, 'classification'] for d_id in cinfo_df['DATASET_ID'].values]), 
-                          np.array([[d_id, 'regression'] for d_id in rinfo_df['DATASET_ID'].values])))
+    datasets = load_datasets()
 
     with open('compiled_results.csv', 'w') as fopen:
         fopen.write('MODEL, DATASET_ID, TYPE, SEED, RMSE, R2_SCORE, LOGLOSS, F1_SCORE\n')

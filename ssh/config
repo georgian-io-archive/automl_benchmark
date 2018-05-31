@@ -1,0 +1,5 @@
+#SSH Information for git repository
+HOST repo
+ HostName github.com
+ User git
+ IdentityFile /root/.ssh/repo_rsa

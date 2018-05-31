@@ -1,0 +1,13 @@
+{
+    "job_queue_id" : "JOB_QUEUE_ID",
+
+    "job_definition_id" : "JOB_DEFINITION_ID",
+ 
+    "job_name" : "JOB_NAME",
+
+    "openml_api_key" : "OPENML_KEY",
+
+    "ecr_repo" : "CONTAINER_REPO_KEY",
+
+    "s3_bucket_root" : "S3_URL"
+}
