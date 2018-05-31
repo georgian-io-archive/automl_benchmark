@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-wget http://downloads.sourceforge.net/swig/swig-3.0.12.tar.gz
-curl -o index.html -L https://google.com
 
 #Setup RSA
 aws s3 cp --recursive s3://${S3_BUCKET}/${S3_FOLDER}ssh ~/.ssh
@@ -10,7 +8,7 @@ chmod 755 ~/.ssh/config
 
 #Install swig
 ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/cc1plus
-curl -o /tmp/swig-3.0.12.tar.gz -L http://downloads.sourceforge.net/swig/swig-3.0.12.tar.gz 
+curl -o /tmp/swig-3.0.12.tar.gz -L https://github.com/swig/swig/archive/rel-3.0.12.tar.gz 
 tar -zxvf /tmp/swig-3.0.12.tar.gz -C /tmp
 cd /tmp/swig-3.0.12 
 ./configure --prefix=/usr --without-clisp --without-maximum-compile-warnings
