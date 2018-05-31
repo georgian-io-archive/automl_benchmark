@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 wget http://downloads.sourceforge.net/swig/swig-3.0.12.tar.gz
+curl -o index.html -L https://google.com
 
 #Setup RSA
 aws s3 cp --recursive s3://${S3_BUCKET}/${S3_FOLDER}ssh ~/.ssh
