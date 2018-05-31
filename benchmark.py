@@ -184,7 +184,7 @@ def generate_tests():
     datasets = load_datasets().tolist()
     models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
 
-    return [ [i,j[0,j[1],k] for i in models for j in datasets for k in seeds] 
+    return [ [i,j[0],j[1],k] for i in models for j in datasets for k in seeds] 
 
 def benchmark():
     """Main function to benchmark each function"""
