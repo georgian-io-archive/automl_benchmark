@@ -7,6 +7,7 @@ Replicating the results
 ```bash
 $ virtualenv -p python3 automl_benchmark
 $ source automl_benchmark/bin/activate
+(automl_benchmark) $ pip install -r pre-requirements.txt # Required for auto-sklearn and openml to install correctly
 (automl_benchmark) $ pip install -r requirements.txt
 ```
 * TODO: Check if sklearn has fixed multi-class support and update requirements

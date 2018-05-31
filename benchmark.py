@@ -9,11 +9,13 @@ from sklearn import metrics
 
 from tqdm import tqdm
 
-TIME_PER_TASK = 120 # 10800 # seconds (3 hours)
+TIME_PER_TASK = 10800 # seconds (3 hours)
 MIN_MEM = '5g'
 MAX_MEM = '6g'
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
+    """Function that trains and tests data using auto-sklearn"""
+
     from autosklearn.classification import AutoSklearnClassifier
     from autosklearn.regression import AutoSklearnRegressor
 
@@ -38,6 +40,8 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
             automl.predict(X_test))
 
 def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
+    """Function that trains and tests data using tpot"""
+
     from tpot import TPOTClassifier
     from tpot import TPOTRegressor
 
@@ -61,22 +65,32 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
             automl.predict(X_test))
 
 def process_h2o(X_train, X_test, y_train, df_types, m_type, seed):
+    """Function that trains and tests data using h2o's AutoML"""
+
     import h2o
     from h2o.automl import H2OAutoML
 
     h2o.init(ip='localhost', port='55555', min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=-1)
     aml = H2OAutoML(max_runtime_secs=TIME_PER_TASK, seed=seed)
     dd = h2o.H2OFrame(pd.concat([X_train, y_train], axis=1))
+    td = h2o.H2OFrame(X_test)
 
+    # set categorical columns as 'factors'
+    categ_cols = df_types[df_types['TYPE'] == 'categorical']['NAME'].values.tolist()
+    if len(categ_cols) > 0:
+        dd[categ_cols] = dd[categ_cols].asfactor()
+        td[categ_cols] = td[categ_cols].asfactor()
     if m_type == 'classification':
         dd['target'] = dd['target'].asfactor()
 
     aml.train(y = 'target', training_frame = dd)
-    response = aml.predict(h2o.H2OFrame(X_test))
+    response = aml.predict(td)
     return (response[1:].as_data_frame().values if m_type == 'classification' else 
             response.as_data_frame().values.ravel())
 
 def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed):
+    """Function that trains and tests data using auto_ml"""
+
     from auto_ml import Predictor
 
     # convert column names to numbers to avoid column name collisions (bug)
@@ -168,21 +182,12 @@ def benchmark():
     with open('compiled_results.csv', 'w') as fopen:
         fopen.write('MODEL, DATASET_ID, TYPE, SEED, RMSE, R2_SCORE, LOGLOSS, F1_SCORE\n')
 
-    models = ['auto_ml'] # ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
-    seeds = [10]
+    models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
 
-
-    # for s in seeds:
-    #   for m in models:
-    #       for d_id, t in tqdm(datasets):
-    #           process(m, d_id, t, s)
-
-    # classification test
-    d_id, t = datasets[0]
-    # regression test
-    # d_id, t = datasets[-1]
-
-    process(models[0], d_id, t, seeds[0])
+    for s in seeds:
+      for m in models:
+          for d_id, t in tqdm(datasets):
+              process(m, d_id, t, s)
 
 
 if __name__ == '__main__':
