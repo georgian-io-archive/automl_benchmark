@@ -106,7 +106,7 @@ def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed):
     automl = Predictor(type_of_estimator='classifier' if m_type == 'classification' else 'regressor',
                              column_descriptions=df_types)
 
-    automl.train(X_train, cv=5, verbose=False) #, optimize_final_model=True
+    automl.train(X_train, cv=5, verbose=False, optimize_final_model=True)
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
             automl.predict(X_test))

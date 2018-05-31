@@ -5,8 +5,8 @@ import pickle
 import boto3
 import time
 
-from benchmark.py import process
-from get_datasets.py import single_dataset
+from benchmark import process
+from get_datasets import single_dataset
 
 def check_file(s3, s3_bucket,s3_folder,key):
     """Checks if a file exists in a s3 folder"""
