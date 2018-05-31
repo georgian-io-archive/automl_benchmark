@@ -8,9 +8,9 @@ chmod 755 ~/.ssh/config
 
 #Install swig
 ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/cc1plus
-curl -o /tmp/swig-3.0.12.tar.gz -L https://github.com/swig/swig/archive/rel-3.0.12.tar.gz 
+curl -o /tmp/swig-3.0.12.tar.gz -L https://downloads.sourceforge.net/project/swig/swig/swig-3.0.12/swig-3.0.12.tar.gz
 tar xf /tmp/swig-3.0.12.tar.gz -C /tmp
-cd /tmp/swig-rel-3.0.12 
+cd /tmp/swig-3.0.12 
 ./configure --prefix=/usr --without-clisp --without-maximum-compile-warnings
 make
 make install
