@@ -108,3 +108,4 @@ venv.bak/
 automl_benchmark/
 datasets/
 batch.config
+compiled_results.csv

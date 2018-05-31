@@ -8,6 +8,11 @@ import scipy
 import pandas as pd
 from tqdm import tqdm
 
+def _make_data_dir():
+    data_dir = './datasets'
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
 def _save_dataset_data(d_id):
     """Takes a OpenMLDataset object and saves the dataset associated with it
     Args:
@@ -68,6 +73,8 @@ def get_studies():
     """Collects the data for a specified set of openml 'studies'"""
     studies = [[130, 'regression'],
                [14, 'classification']]
+
+    _make_data_dir()
 
     for s in studies:
         _get_study(*s)
