@@ -9,7 +9,7 @@ from benchmark.py import process
 from get_datasets.py import single_dataset
 
 def check_file(s3, s3_bucket,s3_folder,key):
-"""Checks if a file exists in a s3 folder"""
+    """Checks if a file exists in a s3 folder"""
 
     try:
         s3.Object(s3_bucket, s3_folder + key).load()
@@ -22,7 +22,7 @@ def check_file(s3, s3_bucket,s3_folder,key):
     return True
 
 def execute():
-"""Executes benchmarking from AWS Batch"""
+    """Executes benchmarking from AWS Batch"""
 
     #Load environment variables
     batch_id = int(os.environ["AWS_BATCH_JOB_ARRAY_INDEX"])
