@@ -7,7 +7,7 @@ from get_config.py import load_config
 from benchmark.py import generate_tests
 
 #Sends the job to amazon batch
-def create_job(name, queue, definition, size, vcpus = 1, memory = 1024):
+def create_job(name, queue, definition, size, s3_bucket, s3_folder, vcpus = 1, memory = 1024):
 
     batch = boto3.client('batch')
 
@@ -15,7 +15,8 @@ def create_job(name, queue, definition, size, vcpus = 1, memory = 1024):
                      jobQueue=queue,
                      arrayProperties={"size":size},
                      jobDefinition=definition,
-                     containerOverrides={"vcpus":vcpus,"memory":memory})
+                     containerOverrides={"vcpus":vcpus,"memory":memory,
+                     "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]})
 
 def benchmark():
     
@@ -33,14 +34,15 @@ def benchmark():
 
     #Generate combinations
     s3 = boto3.resource('s3')
-    with open("tests.dat", "rwb") as f:
+    with open("tests.dat", "wb") as f:
         tests = generate_tests()
         size = len(tests)
         pickle.dump(tests, f)
+    with open("tests,dat", "rb") as f:
         s3.Bucket(s3_bucket).put_object(Key=s3_folder+"tests.dat", Body = f)
 
     
-    create_job(job_name, job_queue_id, job_def, size, vcpus, memory)
+    create_job(job_name, job_queue_id, job_def, size, s3_bucket, s3_folder, vcpus, memory)
 
 if __name__ == '__main__':
     benchmark()

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #Setup RSA
-aws s3 cp --recursive s3://$(python config.py s3_bucket_root)/$(python config.py s3_folder)ssh ~/.ssh
+aws s3 cp --recursive s3://${S3_BUCKET}/${S3_FOLDER}ssh ~/.ssh
 chmod -R 400 ~/.ssh
 chmod 755 ~/.ssh/config
 
@@ -26,18 +26,15 @@ source automl_benchmark/bin/activate
 
 
 #Install requirements
+pip install -r batch-requirements.txt
 pip install -r pre-requirements.txt
 pip install -r requirements.txt
 
-
 #Download data
-python get_data.py
+aws s3 cp s3://${S3_BUCKET}/${S3_FOLDER}tests.dat ./
 
+#Execute benchmark
+python benchmark_wrapper.py
 
-#Run computation
-python compute.py
-
-#Publish results to s3
-aws s3 cp *.csv s3://georgianpartners-auto-ml-data/
 
 exit 0

@@ -138,7 +138,7 @@ def process(m_name, d_id, m_type, seed):
     Args:
         m_name (str): name of the automl model
         d_id (int): the data set id
-        m_type (str): 'r' or 'c' representing the type of automl probelm
+        m_type (str): 'regression' or 'classification' representing the type of automl probelm
         seed (int): random seed for replicable results
     """
     def error():
