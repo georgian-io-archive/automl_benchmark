@@ -10,8 +10,8 @@ from sklearn import metrics
 from tqdm import tqdm
 
 TIME_PER_TASK = 10800 # seconds (3 hours)
-MIN_MEM = '5g'
-MAX_MEM = '6g'
+MIN_MEM = '2g'
+MAX_MEM = '2g'
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
     """Function that trains and tests data using auto-sklearn"""

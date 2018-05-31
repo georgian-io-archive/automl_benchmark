@@ -79,7 +79,7 @@ def get_studies():
     for s in studies:
         _get_study(*s)
 
-def single_dataset(d_id)
+def single_dataset(d_id):
     """Downloads a single dataset"""
     _make_data_dir()
     _save_dataset_data(d_id)
