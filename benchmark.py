@@ -163,6 +163,12 @@ def process(m_name, d_id, m_type, seed):
     else:
         r2_score = metrics.r2_score(y_test, y_hat)
         rmse = np.sqrt(metrics.mean_squared_error(y_test, y_hat))
+
+    return (m_name, d_id, m_type, seed, rmse, r2_score, log_loss, f1_score)
+
+def save_results(m_name, d_id, m_type, seed, rmse, r2_score, log_loss, f1_score):
+    """Saves the results to a local file"""
+
     with open('compiled_results.csv', 'a') as fopen:
         fopen.write('{0},{1},{2},{3},{4},{5},{6},{7}\n'.format(m_name, d_id, m_type, seed, rmse, 
             r2_score, log_loss, f1_score))
@@ -199,8 +205,8 @@ def benchmark():
     for s in seeds:
       for m in models:
           for d_id, t in tqdm(datasets):
-              process(m, d_id, t, s)
-
+              rslts = process(m, d_id, t, s)
+              save_results(*rslts)
 
 if __name__ == '__main__':
-    benchmark()
+    benchmark() # run benchmarking locally
