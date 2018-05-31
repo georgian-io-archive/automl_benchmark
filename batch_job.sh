@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #Setup RSA
-aws s3 cp --recursive s3://georgianpartners-auto-ml-data/ssh ~/.ssh
+aws s3 cp --recursive s3://$(python config.py s3_bucket_root)/$(python config.py s3_folder)ssh ~/.ssh
 chmod -R 400 ~/.ssh
 chmod 755 ~/.ssh/config
 
@@ -17,31 +17,22 @@ cd ~
 
 #Clone down repository
 export GIT_SSH_COMMAND="ssh -F /root/.ssh/config -o StrictHostKeyChecking=no"
-git clone repo:georgianpartners/automl_benchmark automl
-cd  automl
+git clone repo:georgianpartners/automl_benchmark automl_benchmark
+cd  automl_benchmark
 
 #Setup virtual environment
-python3 -m venv automl
-source automl/bin/activate
+python3 -m venv automl_benchmark
+source automl_benchmark/bin/activate
 
-mkdir data
 
-pip install numpy
-pip install cython
+#Install requirements
+pip install -r pre-requirements.txt
 pip install -r requirements.txt
 
-mkdir lib
-cd lib
-git clone https://github.com/openml/openml-python openml-python
-cd openml-python
-pip install ./
-cd ../..
 
 #Download data
 python get_data.py
 
-#Run a test
-tail data/197.csv
 
 #Run computation
 python compute.py

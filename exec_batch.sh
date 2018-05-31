@@ -15,3 +15,6 @@ eval "$(aws ecr get-login --region us-east-1 --no-include-email)"
 #Push to container repo
 docker tag auto-ml-exploration:latest 823217009914.dkr.ecr.us-east-1.amazonaws.com/auto-ml-exploration:latest
 docker push 823217009914.dkr.ecr.us-east-1.amazonaws.com/auto-ml-exploration:latest
+
+#Execute main python script
+python batch.py

@@ -41,3 +41,6 @@ def benchmark():
 
     
     create_job(job_name, job_queue_id, job_def, size, vcpus, memory)
+
+if __name__ == '__main__':
+    benchmark()

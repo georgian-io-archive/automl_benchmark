@@ -109,3 +109,4 @@ automl_benchmark/
 datasets/
 batch.config
 compiled_results.csv
+tests.dat
