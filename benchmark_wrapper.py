@@ -27,7 +27,7 @@ def execute():
     #Load environment variables
     batch_id = int(os.environ["AWS_BATCH_JOB_ARRAY_INDEX"])
     s3_bucket = os.environ["S3_BUCKET"]
-    s3_folder = os.environ["S3_FOLDER"]
+    s3_folder = os.getenv("S3_FOLDER","")
 
     #Load metadata
     with open("tests.dat", "rb") as f:
