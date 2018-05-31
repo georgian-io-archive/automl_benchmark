@@ -1,0 +1,189 @@
+#!/usr/bin/env python
+
+import pandas as pd
+import numpy as np
+
+import sklearn.model_selection
+from sklearn.preprocessing import OneHotEncoder
+from sklearn import metrics
+
+from tqdm import tqdm
+
+TIME_PER_TASK = 120 # 10800 # seconds (3 hours)
+MIN_MEM = '5g'
+MAX_MEM = '6g'
+
+def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
+    from autosklearn.classification import AutoSklearnClassifier
+    from autosklearn.regression import AutoSklearnRegressor
+
+    categ_cols = df_types[df_types.NAME != 'target']['TYPE'].values.ravel()
+
+    if m_type == 'classification':
+        automl = AutoSklearnClassifier(time_left_for_this_task=TIME_PER_TASK,
+                                       per_run_time_limit=int(TIME_PER_TASK/8),
+                                       seed=seed,
+                                       resampling_strategy='cv',
+                                       resampling_strategy_arguments={'folds': 5})
+    else:
+        automl = AutoSklearnRegressor(time_left_for_this_task=TIME_PER_TASK,
+                                      per_run_time_limit=int(TIME_PER_TASK/8),
+                                      seed=seed,
+                                      resampling_strategy='cv',
+                                      resampling_strategy_arguments={'folds': 5})
+    automl.fit(X_train.copy(), y_train.copy(), feat_type=categ_cols)
+    automl.refit(X_train.copy(), y_train.copy())
+
+    return (automl.predict_proba(X_test) if m_type == 'classification' else 
+            automl.predict(X_test))
+
+def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
+    from tpot import TPOTClassifier
+    from tpot import TPOTRegressor
+
+    # default cv is 5
+    if m_type == 'classification':
+        automl = TPOTClassifier(generations=100, 
+                                population_size=100,
+                                verbosity=3,
+                                max_time_mins=int(TIME_PER_TASK/60),
+                                random_state=seed)
+    else:
+        automl = TPOTRegressor(generations=100, 
+                               population_size=100,
+                               verbosity=2,
+                               max_time_mins=int(TIME_PER_TASK/60),
+                               random_state=seed)
+
+    automl.fit(X_train, y_train)
+
+    return (automl.predict_proba(X_test) if m_type == 'classification' else 
+            automl.predict(X_test))
+
+def process_h2o(X_train, X_test, y_train, df_types, m_type, seed):
+    import h2o
+    from h2o.automl import H2OAutoML
+
+    h2o.init(ip='localhost', port='55555', min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=-1)
+    aml = H2OAutoML(max_runtime_secs=TIME_PER_TASK, seed=seed)
+    dd = h2o.H2OFrame(pd.concat([X_train, y_train], axis=1))
+
+    if m_type == 'classification':
+        dd['target'] = dd['target'].asfactor()
+
+    aml.train(y = 'target', training_frame = dd)
+    response = aml.predict(h2o.H2OFrame(X_test))
+    return (response[1:].as_data_frame().values if m_type == 'classification' else 
+            response.as_data_frame().values.ravel())
+
+def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed):
+    from auto_ml import Predictor
+
+    # convert column names to numbers to avoid column name collisions (bug)
+    names = {c: str(i) for i, c in enumerate(X_train.columns)}
+    X_train.columns = names
+    X_test.columns = names
+
+    df_types.loc[df_types['NAME'] == 'target', 'TYPE'] = 'output'
+    df_types = df_types[df_types['TYPE'] != 'numerical'].set_index('NAME')
+    df_types = df_types.rename(index=names)['TYPE'].to_dict()
+    X_train['target'] = y_train
+    
+    automl = Predictor(type_of_estimator='classifier' if m_type == 'classification' else 'regressor',
+                             column_descriptions=df_types)
+
+    automl.train(X_train, cv=5, verbose=False) #, optimize_final_model=True
+
+    return (automl.predict_proba(X_test) if m_type == 'classification' else 
+            automl.predict(X_test))
+
+def parse_open_ml(d_id, seed):
+    """Function that processes each dataset into an interpretable form
+    Args:
+        d_id (int): dataset id
+        seed (int): random seed for replicable results
+    Returns:
+        A tuple of the train / test split data along with the column types
+    """
+
+    df = pd.read_csv('./datasets/{0}.csv'.format(d_id))
+    df_types = pd.read_csv('./datasets/{0}_types.csv'.format(d_id))
+
+    x_cols = [c for c in df.columns if c != 'target']
+    X = df[x_cols]
+    y = df['target']
+
+    X_train, X_test, y_train, y_test = \
+            sklearn.model_selection.train_test_split(X, y, test_size = 0.3, random_state=seed)
+
+    return X_train, X_test, y_train, y_test, df_types
+
+
+def process(m_name, d_id, m_type, seed):
+    """Routing function to call and process the results of each ml model
+    Args:
+        m_name (str): name of the automl model
+        d_id (int): the data set id
+        m_type (str): 'r' or 'c' representing the type of automl probelm
+        seed (int): random seed for replicable results
+    """
+    def error():
+        raise Exception('Invalid model framework!')
+
+    np.random.seed(seed) # set numpy random seed
+
+    model_dict = {'auto-sklearn': process_auto_sklearn,
+                  'tpot': process_tpot,
+                  'h2o': process_h2o,
+                  'auto_ml': process_auto_ml}
+    X_train, X_test, y_train, y_test, df_types = parse_open_ml(d_id, seed)
+    y_hat = model_dict.get(m_name, error)(X_train, X_test, y_train, df_types, m_type, seed)
+
+    rmse, r2_score = (np.nan, np.nan)
+    log_loss, f1_score = (np.nan, np.nan)
+    if m_type == 'classification':
+        ll_y = (y_test if np.unique(y_test).size == 2 else 
+                OneHotEncoder().fit_transform(y_test.values.reshape((-1, 1))))
+        log_loss = metrics.log_loss(ll_y, y_hat)
+        f1_score = metrics.f1_score(y_test, y_hat.argmax(axis=1), average='weighted')
+    else:
+        r2_score = metrics.r2_score(y_test, y_hat)
+        rmse = np.sqrt(metrics.mean_squared_error(y_test, y_hat))
+    with open('compiled_results.csv', 'a') as fopen:
+        fopen.write('{0}, {1}, {2}, {3}, {4}, {5}, {6}, {7}\n'.format(m_name, d_id, m_type, seed, rmse, 
+            r2_score, log_loss, f1_score))
+
+
+def benchmark():
+    """Main function to benchmark each function"""
+
+    cinfo_df = pd.read_csv('./datasets/study_classification_info.csv')
+    rinfo_df = pd.read_csv('./datasets/study_regression_info.csv')
+
+    np.random.seed(1400)
+    seeds = list(map(int, list(np.random.randint(1000, size=10)))) # Generate 10 random 'seeds'
+    datasets = np.vstack((np.array([[d_id, 'classification'] for d_id in cinfo_df['DATASET_ID'].values]), 
+                          np.array([[d_id, 'regression'] for d_id in rinfo_df['DATASET_ID'].values])))
+
+    with open('compiled_results.csv', 'w') as fopen:
+        fopen.write('MODEL, DATASET_ID, TYPE, SEED, RMSE, R2_SCORE, LOGLOSS, F1_SCORE\n')
+
+    models = ['auto_ml'] # ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
+    seeds = [10]
+
+
+    # for s in seeds:
+    #   for m in models:
+    #       for d_id, t in tqdm(datasets):
+    #           process(m, d_id, t, s)
+
+    # classification test
+    d_id, t = datasets[0]
+    # regression test
+    # d_id, t = datasets[-1]
+
+    process(models[0], d_id, t, seeds[0])
+
+
+if __name__ == '__main__':
+    benchmark()
