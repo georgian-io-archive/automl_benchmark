@@ -17,7 +17,7 @@ def create_job(name, queue, definition, size, s3_bucket, s3_folder, vcpus = 1, m
                      jobDefinition=definition,
                      containerOverrides={"vcpus":vcpus,"memory":memory,
                      "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]},
-                     timeout={'attemptDurationSeconds':60})
+                     timeout={'attemptDurationSeconds':12600})
 
 def benchmark():
     
@@ -30,8 +30,8 @@ def benchmark():
     s3_folder = config["s3_folder"]
 
     #Define batch resources
-    vcpus = 4
-    memory = 4096
+    vcpus = 1
+    memory = 2048
 
     #Generate combinations
     s3 = boto3.resource('s3')

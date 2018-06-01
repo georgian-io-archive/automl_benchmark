@@ -9,7 +9,7 @@ from sklearn import metrics
 
 from tqdm import tqdm
 
-TIME_PER_TASK = 10800 # seconds (3 hours)
+TIME_PER_TASK = 120 #10800 # seconds (3 hours)
 MIN_MEM = '2g'
 MAX_MEM = '2g'
 
@@ -189,6 +189,10 @@ def generate_tests():
     seeds = list(map(int, list(np.random.randint(1000, size=10)))) # Generate 10 random 'seeds'
     datasets = load_datasets().tolist()
     models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
+
+
+    seeds = [1]
+    datasets = [datasets[0], datasets[-1]]
 
     return [ [i,j[0],j[1],k] for i in models for j in datasets for k in seeds] 
 
