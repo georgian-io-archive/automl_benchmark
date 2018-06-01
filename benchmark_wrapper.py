@@ -5,6 +5,8 @@ import pickle
 import boto3
 import time
 
+import numpy as np
+
 from benchmark import process
 from get_datasets import single_dataset
 
@@ -43,7 +45,10 @@ def execute():
     single_dataset(dataset)
 
     #Execute benchmark
-    results = process(model, dataset, dtype, seed)
+    try:
+        results = process(model, dataset, dtype, seed)
+    except:
+        results = (model, dataset, dtype, seed, np.nan, np.nan, np.nan, np.nan)
 
     #Upload results to s3
     s3 = boto3.resource('s3')
