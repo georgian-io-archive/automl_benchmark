@@ -17,7 +17,7 @@ def create_job(name, queue, definition, size, s3_bucket, s3_folder, vcpus = 1, m
                      jobDefinition=definition,
                      containerOverrides={"vcpus":vcpus,"memory":memory,
                      "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]},
-                     timeout={'attemptDurationSeconds':30})
+                     timeout={'attemptDurationSeconds':60})
 
 def benchmark():
     
