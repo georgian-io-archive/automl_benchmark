@@ -16,7 +16,8 @@ def create_job(name, queue, definition, size, s3_bucket, s3_folder, vcpus = 1, m
                      arrayProperties={"size":size},
                      jobDefinition=definition,
                      containerOverrides={"vcpus":vcpus,"memory":memory,
-                     "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]})
+                     "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]},
+                     timeout={'attemptDurationSeconds':30})
 
 def benchmark():
     
@@ -42,7 +43,7 @@ def benchmark():
         s3.Bucket(s3_bucket).put_object(Key=s3_folder+"tests.dat", Body = f)
 
     
-    create_job(job_name, job_queue_id, job_def, 2, s3_bucket, s3_folder, vcpus, memory)
+    create_job(job_name, job_queue_id, job_def, size, s3_bucket, s3_folder, vcpus, memory)
 
 if __name__ == '__main__':
     benchmark()
