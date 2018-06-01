@@ -49,10 +49,10 @@ def execute():
     #Upload results to s3
     s3 = boto3.resource('s3')
 
-    with open("results.csv", "a") as f:
+    with open("results.csv", "a", encoding="utf-8") as f:
         csv = ','.join(map(str,results))
         f.write(csv + '\n')
-    with open("results.csv", "r") as f:
+    with open("results.csv", "r", encoding="utf-8") as f:
         s3.Bucket(s3_bucket).put_object(Key=s3_folder+"out/"+"results" + str(batch_id) +".csv", Body = f)
 
 
