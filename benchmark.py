@@ -188,8 +188,9 @@ def generate_tests():
     np.random.seed(1400)
     seeds = list(map(int, list(np.random.randint(1000, size=10)))) # Generate 10 random 'seeds'
     datasets = load_datasets().tolist()
-    models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
+    #models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
 
+    models = ['h2o']
 
     seeds = [1]
     datasets = [datasets[0], datasets[-1]]
@@ -213,4 +214,5 @@ def benchmark():
               save_results(*rslts)
 
 if __name__ == '__main__':
-    benchmark() # run benchmarking locally
+    process('h2o','41021','regression',0)
+    #benchmark() # run benchmarking locally
