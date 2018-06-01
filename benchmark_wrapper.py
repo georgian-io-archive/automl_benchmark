@@ -43,8 +43,7 @@ def execute():
     single_dataset(dataset)
 
     #Execute benchmark
-    #results = process(model, dataset, dtype, seed)
-    results = (model, dataset, dtype, seed, 0, 0, 0, 0)
+    results = process(model, dataset, dtype, seed)
 
     #Upload results to s3
     s3 = boto3.resource('s3')
