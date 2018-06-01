@@ -9,9 +9,9 @@ from sklearn import metrics
 
 from tqdm import tqdm
 
-TIME_PER_TASK = 120 #10800 # seconds (3 hours)
-MIN_MEM = '2g'
-MAX_MEM = '2g'
+TIME_PER_TASK = 10800 # seconds (3 hours)
+MIN_MEM = '1536m'
+MAX_MEM = '1536m'
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
     """Function that trains and tests data using auto-sklearn"""
@@ -188,12 +188,7 @@ def generate_tests():
     np.random.seed(1400)
     seeds = list(map(int, list(np.random.randint(1000, size=10)))) # Generate 10 random 'seeds'
     datasets = load_datasets().tolist()
-    #models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
-
-    models = ['h2o']
-
-    seeds = [1]
-    datasets = [datasets[0], datasets[-1]]
+    models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
 
     return [ [i,j[0],j[1],k] for i in models for j in datasets for k in seeds] 
 
