@@ -54,7 +54,8 @@ def execute():
         f.write(csv + '\n')
         print(csv)
     with open("results.csv", "r", encoding="utf-8") as f:
-        s3.Bucket(s3_bucket).put_object(Key=s3_folder+"out/"+"results" + str(batch_id) +".csv", Body = f)
+        key = (s3_folder+"out/"+"results" + str(batch_id) +".csv").encode("utf-8")
+        s3.Bucket(s3_bucket).put_object(Key=key, Body = f)
 
 
 if __name__ == '__main__':
