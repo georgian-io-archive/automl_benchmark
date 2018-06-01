@@ -49,13 +49,9 @@ def execute():
     #Upload results to s3
     s3 = boto3.resource('s3')
 
-    with open("results.csv", "a", encoding="utf-8") as f:
-        csv = ','.join(map(str,results))
-        f.write(csv + '\n')
-        print(csv)
-    with open("results.csv", "r", encoding="utf-8") as f:
-        key = (s3_folder+"out/"+"results" + str(batch_id) +".csv").encode("utf-8")
-        s3.Bucket(s3_bucket).put_object(Key=key, Body = f)
+    csv = (','.join(map(str,results))+'\n').encode("utf-8")
+    key = (s3_folder+"out/"+"results" + str(batch_id) +".csv")
+    s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
 
 
 if __name__ == '__main__':
