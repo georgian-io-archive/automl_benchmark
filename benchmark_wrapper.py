@@ -36,10 +36,11 @@ def execute():
         data = pickle.load(f)
 
     test_info = data[batch_id]
-    model = test_info[0]
-    dataset = test_info[1]
-    dtype = test_info[2]
-    seed = test_info[3]
+    runid = test_info[0]
+    model = test_info[1]
+    dataset = test_info[2]
+    dtype = test_info[3]
+    seed = test_info[4]
 
     #Download dataset
     single_dataset(dataset)
