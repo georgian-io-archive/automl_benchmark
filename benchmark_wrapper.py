@@ -52,7 +52,7 @@ def execute():
     s3 = boto3.resource('s3')
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
-    key = (s3_folder+"out/"+"results" + str(runid) +".csv")
+    key = (s3_folder+"out-test/"+"results" + str(runid) +".csv")
     s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
 
 
