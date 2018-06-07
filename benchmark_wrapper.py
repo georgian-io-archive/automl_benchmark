@@ -52,7 +52,7 @@ def execute():
     s3 = boto3.resource('s3')
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
-    key = (s3_folder+"out-test/"+"results" + str(runid) +".csv")
+    key = (s3_folder+"out/"+"results" + str(runid) +".csv")
     s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
 
 
@@ -65,8 +65,14 @@ if __name__ == '__main__':
         batch_id = int(os.environ["AWS_BATCH_JOB_ARRAY_INDEX"])
         s3_bucket = os.environ["S3_BUCKET"]
         s3_folder = os.getenv("S3_FOLDER","")
+
+        test_info = data[batch_id]
         runid = test_info[0]
+        model = test_info[1]
+        dataset = test_info[2]
+        dtype = test_info[3]
+        seed = test_info[4]
 
         err = str(e).encode("utf-8")
-        key = s3_folder + "err/results" + str(runid)
+        key = s3_folder + "err/" + str(runid) + "-" + model + "-" + dataset + "-" + dtype + "-" + str(seed)
         s3.Bucket(s3_bucket).put_object(Key=key, Body=csv) 
