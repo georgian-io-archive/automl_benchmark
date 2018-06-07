@@ -66,6 +66,9 @@ if __name__ == '__main__':
         s3_bucket = os.environ["S3_BUCKET"]
         s3_folder = os.getenv("S3_FOLDER","")
 
+        with open("tests.dat", "rb") as f:
+            data = pickle.load(f)
+
         test_info = data[batch_id]
         runid = test_info[0]
         model = test_info[1]
