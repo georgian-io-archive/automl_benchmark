@@ -20,14 +20,17 @@ def get_nan_rows()
 	runs_df = pd.read_csv('./compiled_results.csv', header=0)
 
 	grouped = runs_df.groupby('TYPE')
+	nan_ids = []
 
 	for g, df in grouped:
 		if g == 'classification':
 			df = df.drop(columns=['RMSE', 'R2_SCORE'])
-			print(df[df.isnull().any(axis=1)])
+			nan_ids.extend(df[df.isnull().any(axis=1)]['ID'].values.ravel().tolist())
 		else:
 			df = df.drop(columns=['LOGLOSS', 'F1_SCORE'])
-			print(df[df.isnull().any(axis=1)])
+			nan_ids.extend(df[df.isnull().any(axis=1)]['ID'].values.ravel().tolist())
+
+	return nan_ids
 
 if __name__ == '__main__':
 	# analyze_runs()
