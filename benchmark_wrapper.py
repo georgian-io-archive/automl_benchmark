@@ -78,4 +78,4 @@ if __name__ == '__main__':
 
         err = str(e).encode("utf-8")
         key = s3_folder + "err/" + str(runid) + "-" + model + "-" + dataset + "-" + dtype + "-" + str(seed)
-        s3.Bucket(s3_bucket).put_object(Key=key, Body=csv) 
+        s3.Bucket(s3_bucket).put_object(Key=key, Body=err) 
