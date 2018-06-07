@@ -32,12 +32,12 @@ def benchmark(get_tests):
 
     #Define batch resources
     vcpus = 2
-    memory = 4090
+    memory = 5000
 
     #Generate combinations
     s3 = boto3.resource('s3')
     with open("tests.dat", "wb") as f:
-        tests = [ [i] + d for i, d in enumerate(get_tests()) ]
+        tests = get_tests()
         size = len(tests)
         pickle.dump(tests, f)
     with open("tests.dat", "rb") as f:
@@ -46,6 +46,18 @@ def benchmark(get_tests):
     
     create_job(job_name, job_queue_id, job_def, size, s3_bucket, s3_folder, vcpus, memory)
 
+
+
+def partial(nums, models):
+    
+    def get_partial():
+        fail = get_failures()
+        runs = []
+        for j, v in enumerate(nums):
+            runs += [x for x in fail if x[1] == models[j]][:v]
+        return runs
+
+    benchmark(get_partial)
 
 def resume():
     """Resumes process and restarts failed tasks"""
@@ -63,11 +75,7 @@ def get_failures():
     client = boto3.client('s3')
     batch = boto3.client('batch')
 
-    s3.meta.client.download_file(s3_bucket, s3_folder + "tests.dat", '/tmp/tests.dat')
-
-    with open("/tmp/tests.dat", "rb") as f:
-        data = pickle.load(f)
-
+    data = generate_tests()
 
     """
     job_index = []
