@@ -103,10 +103,12 @@ def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed):
     df_types = df_types.rename(index=names)['TYPE'].to_dict()
     X_train['target'] = y_train
 
-    cmodels = ['XGBClassifier', 'AdaBoostClassifier', 'ExtraTreesClassifier', 'PassiveAggressiveClassifier', 
-        'RandomForestClassifier']
-    rmodels = ['XGBRegressor', 'LogisticRegression', 'AdaBoostRegressor', 'ExtraTreesRegressor', 
-        'PassiveAggressiveRegressor', 'RandomForestRegressor']
+    cmodels = ['AdaBoostClassifier', 'ExtraTreesClassifier', 'MiniBatchKMeans', 'Perceptron', 
+        'PassiveAggressiveClassifier', 'RandomForestClassifier', 'SGDClassifier', 'RidgeClassifier', 
+        'XGBClassifier']
+    rmodels = ['BayesianRidge', 'ElasticNet', 'Lasso', 'LassoLars', 'LinearRegression', 
+        'Perceptron', 'LogisticRegression', 'AdaBoostRegressor', 'ExtraTreesRegressor', 
+        'PassiveAggressiveRegressor', 'RandomForestRegressor', 'SGDRegressor', 'XGBRegressor']
     
     automl = Predictor(type_of_estimator='classifier' if m_type == 'classification' else 'regressor',
                              column_descriptions=df_types)
@@ -217,6 +219,6 @@ def benchmark():
               save_results(*rslts)
 
 if __name__ == '__main__':
-    # process('h2o','41021','regression',0)
-    # process('auto_ml', '41021', 'regression', 741)
-    benchmark() # run benchmarking locally
+    # process('auto_ml', '344', 'regression', 741)
+    process('auto_ml', '23512', 'classification', 741)
+    # benchmark() # run benchmarking locally
