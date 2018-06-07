@@ -9,7 +9,7 @@ from sklearn import metrics
 
 from tqdm import tqdm
 
-TIME_PER_TASK = 300 #10800 # seconds (3 hours)
+TIME_PER_TASK = 10800 # seconds (3 hours)
 MIN_MEM = '3g'
 MAX_MEM = '3g'
 
@@ -102,11 +102,17 @@ def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed):
     df_types = df_types[df_types['TYPE'] != 'numerical'].set_index('NAME')
     df_types = df_types.rename(index=names)['TYPE'].to_dict()
     X_train['target'] = y_train
+
+    cmodels = ['XGBClassifier', 'AdaBoostClassifier', 'ExtraTreesClassifier', 'PassiveAggressiveClassifier', 
+        'RandomForestClassifier']
+    rmodels = ['XGBRegressor', 'LogisticRegression', 'AdaBoostRegressor', 'ExtraTreesRegressor', 
+        'PassiveAggressiveRegressor', 'RandomForestRegressor']
     
     automl = Predictor(type_of_estimator='classifier' if m_type == 'classification' else 'regressor',
                              column_descriptions=df_types)
 
-    automl.train(X_train, cv=5, verbose=False, optimize_final_model=True)
+    automl.train(X_train, model_names=cmodels if m_type == 'classification' else rmodels,
+        cv=5, verbose=False)
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
             automl.predict(X_test))
@@ -211,5 +217,6 @@ def benchmark():
               save_results(*rslts)
 
 if __name__ == '__main__':
-    process('h2o','41021','regression',0)
-    #benchmark() # run benchmarking locally
+    # process('h2o','41021','regression',0)
+    # process('auto_ml', '41021', 'regression', 741)
+    benchmark() # run benchmarking locally
