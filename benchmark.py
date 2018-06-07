@@ -170,7 +170,7 @@ def save_results(m_name, d_id, m_type, seed, rmse, r2_score, log_loss, f1_score)
     """Saves the results to a local file"""
 
     with open('compiled_results.csv', 'a') as fopen:
-        fopen.write('{0},{1},{2},{3},{4},{5},{6},{7}\n'.format(m_name, d_id, m_type, seed, rmse, 
+        fopen.write('0,{0},{1},{2},{3},{4},{5},{6},{7}\n'.format(m_name, d_id, m_type, seed, rmse, 
             r2_score, log_loss, f1_score))
 
 def load_datasets():
@@ -200,7 +200,7 @@ def benchmark():
     datasets = load_datasets()
 
     with open('compiled_results.csv', 'w') as fopen:
-        fopen.write('MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n')
+        fopen.write('ID,MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n')
 
     models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
 

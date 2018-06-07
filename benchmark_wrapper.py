@@ -61,7 +61,7 @@ if __name__ == '__main__':
         execute()
     except Exception as e:
         
-        s3 = boto.resource('s3')
+        s3 = boto3.resource('s3')
         batch_id = int(os.environ["AWS_BATCH_JOB_ARRAY_INDEX"])
         s3_bucket = os.environ["S3_BUCKET"]
         s3_folder = os.getenv("S3_FOLDER","")
