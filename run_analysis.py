@@ -16,7 +16,7 @@ def analyze_runs():
 	print('VARIANCE')
 	print(runs_df.drop(columns=['SEED']).groupby(['TYPE', 'MODEL', 'DATASET_ID']).var())
 
-def get_nan_rows()
+def get_nan_ids():
 	runs_df = pd.read_csv('./compiled_results.csv', header=0)
 
 	grouped = runs_df.groupby('TYPE')
@@ -35,4 +35,4 @@ def get_nan_rows()
 if __name__ == '__main__':
 	# analyze_runs()
 	set_print_options()
-	get_nan_rows()
+	get_nan_ids()
