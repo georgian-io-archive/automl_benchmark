@@ -14,6 +14,13 @@ class TempFile:
     def getbytes(self):
         return self.data
 
+def delete_file(fid): 
+    s3 = boto3.resource('s3')
+    cfg = load_config()
+    s3_bucket = cfg["s3_bucket_root"]
+    s3_folder = cfg["s3_folder"]
+    s3.Bucket(s3_bucket).delete_objects(Delete={'Objects':[{'Key':s3_folder+ "out/results" + str(fid) + ".csv"}]})
+
 def extract():
     s3 = boto3.resource('s3')
     cfg = load_config()
@@ -32,7 +39,7 @@ def extract():
                 f.write((str(count) + ",").encode("utf-8"))
                 s3.Bucket(s3_bucket).download_fileobj(s3_folder + "out/results" + str(count) + ".csv",  temp)
                 f.write(temp.getbytes())
-                #s3.Bucket(s3_bucket).delete_objects(Delete={'Objects':[{'Key':s3_folder+ "out/results" + str(count) + ".csv"}]})
+                #delete_file(count)
             except Exception as e:
                 pass
                 f.seek(last_pos)
