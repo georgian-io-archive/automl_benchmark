@@ -10,8 +10,9 @@ from sklearn import metrics
 from tqdm import tqdm
 
 TIME_PER_TASK = 10800 # seconds (3 hours)
-MIN_MEM = '3g'
-MAX_MEM = '3g'
+MIN_MEM = '5g'
+MAX_MEM = '5g'
+N_CORES = 3
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
     """Function that trains and tests data using auto-sklearn"""
@@ -70,7 +71,9 @@ def process_h2o(X_train, X_test, y_train, df_types, m_type, seed):
     import h2o
     from h2o.automl import H2OAutoML
 
-    h2o.init(ip='localhost', port='55555', min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=-1)
+    port = np.random.randint(5555,8888)
+
+    h2o.init(ip='localhost', port=port, min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=N_CORES*2, ice_root='/tmp/')
     aml = H2OAutoML(max_runtime_secs=TIME_PER_TASK, seed=seed)
     dd = h2o.H2OFrame(pd.concat([X_train, y_train], axis=1))
     td = h2o.H2OFrame(X_test)
