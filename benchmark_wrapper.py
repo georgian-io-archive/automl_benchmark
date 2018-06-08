@@ -77,5 +77,5 @@ if __name__ == '__main__':
         seed = test_info[4]
 
         err = str(e).encode("utf-8")
-        key = s3_folder + "err/" + str(runid) + "-" + model + "-" + dataset + "-" + dtype + "-" + str(seed)
-        s3.Bucket(s3_bucket).put_object(Key=key, Body=csv) 
+        key = s3_folder + "err/" + model + "/" + str(runid) + "-"  + dataset + "-" + dtype + "-" + str(seed)
+        s3.Bucket(s3_bucket).put_object(Key=key, Body=err) 
