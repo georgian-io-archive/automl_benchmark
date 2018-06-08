@@ -1,6 +1,6 @@
 alabaster==0.7.10
 -e git+https://github.com/adithyabsk/auto_ml.git#egg=auto_ml
--e git+https://github.com/automl/auto-sklearn.git@43eb3d86b72374a15382e418482a363edeace39b#egg=auto_sklearn
+-e git+https://github.com/adithyabsk/auto-sklearn.git@automl-benchmark-dev#egg=auto_sklearn
 Babel==2.6.0
 certifi==2018.4.16
 chardet==3.0.4
