@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import multiprocessing as mp
+
 import pandas as pd
 import numpy as np
 
@@ -45,22 +47,30 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
 
     from tpot import TPOTClassifier
     from tpot import TPOTRegressor
+    from tpot_config import classifier_config_dict
 
     # default cv is 5
     if m_type == 'classification':
-        automl = TPOTClassifier(generations=100, 
-                                population_size=100,
+        automl = TPOTClassifier(generations=100,
+                                population_size=200,
+                                config_dict=classifier_config_dict,
                                 verbosity=3,
                                 max_time_mins=int(TIME_PER_TASK/60),
+                                scoring='f1_weighted',
+                                n_jobs=N_CORES*2,
                                 random_state=seed)
     else:
         automl = TPOTRegressor(generations=100, 
-                               population_size=100,
-                               verbosity=2,
+                               population_size=200,
+                               verbosity=3,
                                max_time_mins=int(TIME_PER_TASK/60),
+                               n_jobs=N_CORES*2,
                                random_state=seed)
 
     automl.fit(X_train, y_train)
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(automl.fitted_pipeline_)
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
             automl.predict(X_test))
@@ -206,18 +216,18 @@ def generate_tests():
 def benchmark():
     """Main function to benchmark each function"""
 
-    datasets = load_datasets()
-
     with open('compiled_results.csv', 'w') as fopen:
         fopen.write('ID,MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n')
 
-    models = ['auto-sklearn', 'tpot', 'h2o', 'auto_ml']
+    test = generate_tests()
 
-    for s in seeds:
-      for m in models:
-          for d_id, t in tqdm(datasets):
-              rslts = process(m, d_id, t, s)
-              save_results(*rslts)
+    for i, m, d_id, t, s in tests():
+        rslts = process(m, d_id, t, s)
+        save_results(*rslts)
 
 if __name__ == '__main__':
+    try:
+        mp.set_start_method('forkserver')
+    except RuntimeError:
+        pass
     benchmark() # run benchmarking locally
