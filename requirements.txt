@@ -1,5 +1,5 @@
 alabaster==0.7.10
--e git+https://github.com/adithyabsk/auto_ml.git@9fa869a00531568a0f722f1964868099d4b52959#egg=auto_ml
+-e git+https://github.com/adithyabsk/auto_ml.git#egg=auto_ml
 -e git+https://github.com/automl/auto-sklearn.git@43eb3d86b72374a15382e418482a363edeace39b#egg=auto_sklearn
 Babel==2.6.0
 certifi==2018.4.16
@@ -70,7 +70,7 @@ sphinxcontrib-websupport==1.0.1
 stevedore==1.28.0
 stopit==1.1.2
 tabulate==0.8.2
-TPOT==0.9.3
+-e git+https://github.com/adithyabsk/tpot.git#egg=TPOT
 tqdm==4.23.4
 traitlets==4.3.2
 typing==3.6.4
