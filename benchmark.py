@@ -103,9 +103,7 @@ def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed):
     df_types = df_types.rename(index=names)['TYPE'].to_dict()
     X_train['target'] = y_train
 
-    cmodels = ['AdaBoostClassifier', 'ExtraTreesClassifier', 'MiniBatchKMeans', 'Perceptron', 
-        'PassiveAggressiveClassifier', 'RandomForestClassifier', 'SGDClassifier', 'RidgeClassifier', 
-        'XGBClassifier']
+    cmodels = ['AdaBoostClassifier', 'ExtraTreesClassifier', 'RandomForestClassifier', 'XGBClassifier']
     rmodels = ['BayesianRidge', 'ElasticNet', 'Lasso', 'LassoLars', 'LinearRegression', 
         'Perceptron', 'LogisticRegression', 'AdaBoostRegressor', 'ExtraTreesRegressor', 
         'PassiveAggressiveRegressor', 'RandomForestRegressor', 'SGDRegressor', 'XGBRegressor']
@@ -219,6 +217,4 @@ def benchmark():
               save_results(*rslts)
 
 if __name__ == '__main__':
-    # process('auto_ml', '344', 'regression', 741)
-    process('auto_ml', '23512', 'classification', 741)
-    # benchmark() # run benchmarking locally
+    benchmark() # run benchmarking locally
