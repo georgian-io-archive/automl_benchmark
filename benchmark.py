@@ -171,12 +171,11 @@ def process(m_name, d_id, m_type, seed):
                   'auto_ml': process_auto_ml}
     X_train, X_test, y_train, y_test, df_types = parse_open_ml(d_id, seed)
     y_hat = model_dict.get(m_name, error)(X_train, X_test, y_train, df_types, m_type, seed)
-
     rmse, r2_score = (np.nan, np.nan)
     log_loss, f1_score = (np.nan, np.nan)
     if m_type == 'classification':
         ll_y = (y_test if np.unique(y_test).size == 2 else 
-                OneHotEncoder().fit_transform(y_test.values.reshape((-1, 1))))
+                OneHotEncoder().fit(y_train.values.reshape((-1, 1))).transform(y_test.values.reshape((-1,1))))
         log_loss = metrics.log_loss(ll_y, y_hat)
         f1_score = metrics.f1_score(y_test, y_hat.argmax(axis=1), average='weighted')
     else:
