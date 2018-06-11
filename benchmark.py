@@ -9,9 +9,9 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn import metrics
 from tqdm import tqdm
 
-TIME_PER_TASK = 10800 # seconds (3 hours)
-MIN_MEM = '5g'
-MAX_MEM = '5g'
+TIME_PER_TASK = 300 #10800 # seconds (3 hours)
+MIN_MEM = '4990M'
+MAX_MEM = '4990M'
 N_CORES = 3
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
@@ -55,14 +55,14 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
                                 verbosity=3,
                                 max_time_mins=int(TIME_PER_TASK/60),
                                 scoring='f1_weighted',
-                                n_jobs=N_CORES*2,
+                                n_jobs=N_CORES,
                                 random_state=seed)
     else:
         automl = TPOTRegressor(generations=100, 
                                population_size=200,
                                verbosity=3,
                                max_time_mins=int(TIME_PER_TASK/60),
-                               n_jobs=N_CORES*2,
+                               n_jobs=N_CORES,
                                random_state=seed)
 
     automl.fit(X_train.values, y_train.values)
@@ -78,7 +78,7 @@ def process_h2o(X_train, X_test, y_train, df_types, m_type, seed):
 
     port = np.random.randint(5555,8888)
 
-    h2o.init(ip='localhost', port=port, min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=N_CORES*2, ice_root='/tmp/')
+    h2o.init(ip='localhost', port=port, min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=N_CORES, ice_root='/tmp/')
     aml = H2OAutoML(max_runtime_secs=TIME_PER_TASK, seed=seed)
     dd = h2o.H2OFrame(pd.concat([X_train, y_train], axis=1))
     td = h2o.H2OFrame(X_test)
@@ -137,9 +137,11 @@ def parse_open_ml(d_id, seed):
     df = pd.read_csv('./datasets/{0}.csv'.format(d_id))
     df_types = pd.read_csv('./datasets/{0}_types.csv'.format(d_id))
 
-    x_cols = [c for c in df.columns if c != 'target']
-    X = df[x_cols]
-    y = df['target']
+    df_valid = df[~df['target'].isnull()]
+
+    x_cols = [c for c in df_valid.columns if c != 'target']
+    X = df_valid[x_cols]
+    y = df_valid['target']
 
     X_train, X_test, y_train, y_test = \
             sklearn.model_selection.train_test_split(X, y, test_size = 0.3, random_state=seed)
