@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+#Config Java environmental variables
+export _JAVA_OPTIONS='-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
 
 #Setup RSA
 aws s3 cp --recursive s3://${S3_BUCKET}/${S3_FOLDER}ssh ~/.ssh
