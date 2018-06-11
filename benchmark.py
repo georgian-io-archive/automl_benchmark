@@ -9,7 +9,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn import metrics
 from tqdm import tqdm
 
-TIME_PER_TASK = 300 #10800 # seconds (3 hours)
+TIME_PER_TASK = 10800 # seconds (3 hours)
 MIN_MEM = '4990M'
 MAX_MEM = '4990M'
 N_CORES = 3
@@ -50,7 +50,7 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
     # default cv is 5
     if m_type == 'classification':
         automl = TPOTClassifier(generations=100,
-                                population_size=200,
+                                population_size=100,
                                 config_dict=classifier_config_dict,
                                 verbosity=3,
                                 max_time_mins=int(TIME_PER_TASK/60),
@@ -59,7 +59,7 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
                                 random_state=seed)
     else:
         automl = TPOTRegressor(generations=100, 
-                               population_size=200,
+                               population_size=100,
                                verbosity=3,
                                max_time_mins=int(TIME_PER_TASK/60),
                                n_jobs=N_CORES,
