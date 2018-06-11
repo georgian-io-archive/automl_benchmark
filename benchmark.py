@@ -142,9 +142,11 @@ def parse_open_ml(d_id, seed):
     df = pd.read_csv('./datasets/{0}.csv'.format(d_id))
     df_types = pd.read_csv('./datasets/{0}_types.csv'.format(d_id))
 
-    x_cols = [c for c in df.columns if c != 'target']
-    X = df[x_cols]
-    y = df['target']
+    df_valid = df[~df['target'].isnull()]
+
+    x_cols = [c for c in df_valid.columns if c != 'target']
+    X = df_valid[x_cols]
+    y = df_valid['target']
 
     X_train, X_test, y_train, y_test = \
             sklearn.model_selection.train_test_split(X, y, test_size = 0.3, random_state=seed)
