@@ -11,7 +11,7 @@ from sklearn import metrics
 
 from tqdm import tqdm
 
-TIME_PER_TASK = 10800 # seconds (3 hours)
+TIME_PER_TASK = 300 #10800 # seconds (3 hours)
 MIN_MEM = '5g'
 MAX_MEM = '5g'
 N_CORES = 3
