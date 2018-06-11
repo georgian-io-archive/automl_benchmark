@@ -2,13 +2,11 @@
 
 import multiprocessing as mp
 
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 import sklearn.model_selection
 from sklearn.preprocessing import OneHotEncoder
 from sklearn import metrics
-
 from tqdm import tqdm
 
 TIME_PER_TASK = 10800 # seconds (3 hours)
@@ -67,13 +65,10 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
                                n_jobs=N_CORES*2,
                                random_state=seed)
 
-    automl.fit(X_train, y_train)
-    import pprint
-    pp = pprint.PrettyPrinter(indent=4)
-    pp.pprint(automl.fitted_pipeline_)
+    automl.fit(X_train.values, y_train.values)
 
-    return (automl.predict_proba(X_test) if m_type == 'classification' else 
-            automl.predict(X_test))
+    return (automl.predict_proba(X_test.values) if m_type == 'classification' else 
+            automl.predict(X_test.values))
 
 def process_h2o(X_train, X_test, y_train, df_types, m_type, seed):
     """Function that trains and tests data using h2o's AutoML"""
@@ -229,4 +224,5 @@ if __name__ == '__main__':
         mp.set_start_method('forkserver')
     except RuntimeError:
         pass
+    
     benchmark() # run benchmarking locally
