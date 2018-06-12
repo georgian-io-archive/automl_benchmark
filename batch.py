@@ -31,8 +31,8 @@ def benchmark(get_tests):
     s3_folder = config["s3_folder"]
 
     #Define batch resources
-    vcpus = 2
-    memory = 6500
+    vcpus = 4
+    memory = 7680
 
     #Generate combinations
     s3 = boto3.resource('s3')
