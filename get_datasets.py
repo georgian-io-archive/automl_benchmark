@@ -8,7 +8,7 @@ import scipy
 import pandas as pd
 from tqdm import tqdm
 
-MAX_SPACE = 15000000
+MAX_SPACE = 10000000
 
 def _make_data_dir():
     data_dir = './datasets'
@@ -40,6 +40,7 @@ def _save_dataset_data(d_id):
 
     space = len(df) * len(df.columns)
     if space > MAX_SPACE: # reduce size of large datasets
+        print('ENTERED: ', d_id)
         df = df[:int((MAX_SPACE/space)*len(df))]
 
     # Build categories df
