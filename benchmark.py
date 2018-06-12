@@ -29,13 +29,16 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
                                        per_run_time_limit=int(TIME_PER_TASK/8),
                                        seed=seed,
                                        resampling_strategy='cv',
-                                       resampling_strategy_arguments={'folds': 5})
+                                       resampling_strategy_arguments={'folds': 5},
+                                       delete_output_folder_after_terminate=False)
     else:
         automl = AutoSklearnRegressor(time_left_for_this_task=TIME_PER_TASK,
                                       per_run_time_limit=int(TIME_PER_TASK/8),
                                       seed=seed,
                                       resampling_strategy='cv',
-                                      resampling_strategy_arguments={'folds': 5})
+                                      resampling_strategy_arguments={'folds': 5},
+                                      delete_output_folder_after_terminate=False)
+    
     automl.fit(X_train.copy(), y_train.copy(), feat_type=categ_cols)
     automl.refit(X_train.copy(), y_train.copy())
 
