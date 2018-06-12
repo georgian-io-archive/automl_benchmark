@@ -32,7 +32,7 @@ def benchmark(get_tests):
 
     #Define batch resources
     vcpus = 2
-    memory = 3500
+    memory = 6500
 
     #Generate combinations
     s3 = boto3.resource('s3')
