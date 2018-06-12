@@ -54,7 +54,7 @@ def execute():
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
     key = (s3_folder+"out/"+"results" + str(runid) +".csv")
-    #s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
+    s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
 
 
 if __name__ == '__main__':
