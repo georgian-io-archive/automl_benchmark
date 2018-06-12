@@ -83,4 +83,11 @@ if __name__ == '__main__':
 
         err = str(e).encode("utf-8")
         key = s3_folder + "err/" + model + "/" + str(runid) + "-"  + dataset + "-" + dtype + "-" + str(seed)
-        s3.Bucket(s3_bucket).put_object(Key=key, Body=err) 
+        s3.Bucket(s3_bucket).put_object(Key=key, Body=err)
+
+        for subdir, dirs, files in os.walk("/tmp"):
+            for file in files:
+                full_path = os.path.join(subdir, file)
+                with open(full_path, 'rb') as data:
+                    s3.Bucket(s3_bucket).put_object(Key=s3_folder + "err/tmp/" + model + str(runid) + "-" + dataset + "-" + dtype + "-" + str(seed) + "/" + full_path[len(path)+1:], Body=data)
+  
