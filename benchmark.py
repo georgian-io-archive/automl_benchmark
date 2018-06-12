@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import signal
 import multiprocessing as mp
 
 import numpy as np
@@ -10,6 +11,7 @@ from sklearn import metrics
 from tqdm import tqdm
 
 TIME_PER_TASK = 10800 # seconds (3 hours)
+GRACE_PERIOD = 300
 MIN_MEM = '4090M'
 MAX_MEM = '4090M'
 N_CORES = 2
@@ -47,6 +49,12 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
     from tpot import TPOTRegressor
     from tpot_config import classifier_config_dict
 
+    # Register Timer
+    def handler(signum, frame):
+        raise SystemExit('Time limit exceeded, sending system exit...')
+
+    signal.signal(signal.SIGALRM, handler)
+
     # default cv is 5
     if m_type == 'classification':
         automl = TPOTClassifier(generations=100,
@@ -65,6 +73,9 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
                                n_jobs=N_CORES,
                                random_state=seed)
 
+    # Set timer
+    # for long running processes TPOT sometimes does not end even with generations
+    signal.alarm(TIME_PER_TASK+GRACE_PERIOD)
     automl.fit(X_train.values, y_train.values)
 
     return (automl.predict_proba(X_test.values) if m_type == 'classification' else 
