@@ -10,7 +10,7 @@ chmod 755 ~/.ssh/config
 
 #Install swig
 ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/cc1plus
-curl -o ~/swig-3.0.12.tar.gz -L https://downloads.sourceforge.net/project/swig/swig/swig-3.0.12/swig-3.0.12.tar.gz
+aws s3 cp s3://${S3_BUCKET}/${S3_FOLDER}swig.tar.gz ~/swig-3.0.12.tar.gz
 tar xf ~/swig-3.0.12.tar.gz -C ~/
 cd ~/swig-3.0.12 
 ./configure --prefix=/usr --without-clisp --without-maximum-compile-warnings
