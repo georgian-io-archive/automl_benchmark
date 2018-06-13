@@ -1,14 +1,5 @@
 #!/usr/bin/env bash
 
-#Setup large SWAP space
-export SWAPFILE=/root/swap
-dd if=/dev/zero of=$SWAPFILE bs=1024 count=4000000
-mkswap $SWAPFILE
-chmod 600 $SWAPFILE
-chown root: $SWAPFILE
-swapoff -a
-swapon -v $SWAPFILE
-
 #Config Java environmental variables
 export _JAVA_OPTIONS='-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
 

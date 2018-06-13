@@ -14,7 +14,7 @@ TIME_PER_TASK = 10800 # seconds (3 hours)
 GRACE_PERIOD = 300
 MIN_MEM = '6g'
 MAX_MEM = '6g'
-N_CORES = 4
+N_CORES = 2
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
     """Function that trains and tests data using auto-sklearn"""
