@@ -2,11 +2,12 @@
 
 #Setup large SWAP space
 export SWAPFILE=/root/swap
-dd if=/dev/zero of=$SWAPFILE bs=1024 count=8000000
+dd if=/dev/zero of=$SWAPFILE bs=1024 count=4000000
 mkswap $SWAPFILE
 chmod 600 $SWAPFILE
 chown root: $SWAPFILE
-swapon $SWAPFILE
+swapoff -a
+swapon -v $SWAPFILE
 
 #Config Java environmental variables
 export _JAVA_OPTIONS='-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'
