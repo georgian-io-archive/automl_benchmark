@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 import boto3
+from benchmark import generate_tests
+from tqdm import tqdm
 
 from config import load_config
 
@@ -26,24 +28,22 @@ def extract():
     cfg = load_config()
     s3_bucket = cfg["s3_bucket_root"]
     s3_folder = cfg["s3_folder"]
-  
-    count = 0
+
+    RANGE = len(generate_tests()) + 1
 
     with open("compiled_results.csv", "wb") as f:
-        f.write('ID,MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n')
-        while count < 5200:
+        f.write('ID,MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n'.encode('utf-8'))
+        for c in tqdm(range(RANGE)):
             temp = TempFile()
-            print(count)
             last_pos = f.tell()
             try:
-                f.write((str(count) + ",").encode("utf-8"))
-                s3.Bucket(s3_bucket).download_fileobj(s3_folder + "out/results" + str(count) + ".csv",  temp)
+                f.write((str(c) + ",").encode("utf-8"))
+                s3.Bucket(s3_bucket).download_fileobj(s3_folder + "out/results" + str(c) + ".csv",  temp)
                 f.write(temp.getbytes())
-                #delete_file(count)
+                #delete_file(c)
             except Exception as e:
                 pass
                 f.seek(last_pos)
-            count += 1
      
 
 if __name__ == '__main__':
