@@ -2,9 +2,10 @@
 
 #Setup large SWAP space
 export SWAPFILE=/root/swap
-dd if=/dev/zero of=$SWAPFILE bs=1024 count=12000000
+dd if=/dev/zero of=$SWAPFILE bs=1024 count=8000000
 mkswap $SWAPFILE
 chmod 600 $SWAPFILE
+chown root: $SWAPFILE
 swapon $SWAPFILE
 
 #Config Java environmental variables
