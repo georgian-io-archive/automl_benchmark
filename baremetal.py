@@ -42,9 +42,9 @@ class BareDispatch(Dispatcher):
         return out
 
     @staticmethod
-    def dispatch(tests, ip, s3_bucket, s3_folder):
+    def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder):
         for t in tests:
-            p = subprocess.Popen('ssh -F ssh/config ' + ip + ' "sudo S3_BUCKET=' + s3_bucket  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').strip() + ' bash -s" < baremetal_job.sh', shell=True)
+            p = subprocess.Popen('ssh -F ssh/config ' + ip + ' "sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').strip() + ' bash -s" < baremetal_job.sh', shell=True)
             p.wait()
 
     @classmethod
@@ -64,7 +64,7 @@ class BareDispatch(Dispatcher):
         
 
         for i, c in enumerate(cls.chunk(tests, len(ips))):
-            t = threading.Thread(target=cls.dispatch, args=(c, ips[i], bucket, s3_folder))
+            t = threading.Thread(target=cls.dispatch, args=(c, ips[i], bucket, s3_bucket, s3_folder))
             threads.append(t)
             t.start()
 
