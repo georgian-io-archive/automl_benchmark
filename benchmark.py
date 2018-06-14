@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
-import signal
 import multiprocessing as mp
+if __name__ == '__main__':
+    # this needs to be here because other libs import mp
+    try:
+        mp.set_start_method('forkserver')
+    except RuntimeError:
+        print('Failed to set forkserver')
+import signal
 
 import numpy as np
 import pandas as pd
@@ -19,6 +25,8 @@ N_CORES = 2
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args):
     """Function that trains and tests data using auto-sklearn"""
 
+    
+
     from autosklearn.classification import AutoSklearnClassifier
     from autosklearn.regression import AutoSklearnRegressor
 
@@ -30,17 +38,19 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args
                                        seed=seed,
                                        resampling_strategy='cv',
                                        resampling_strategy_arguments={'folds': 5},
-                                       delete_output_folder_after_terminate=False)
+                                       delete_tmp_folder_after_terminate=False)
     else:
         automl = AutoSklearnRegressor(time_left_for_this_task=TIME_PER_TASK,
                                       per_run_time_limit=int(TIME_PER_TASK/8),
                                       seed=seed,
                                       resampling_strategy='cv',
                                       resampling_strategy_arguments={'folds': 5},
-                                      delete_output_folder_after_terminate=False)
+                                      delete_tmp_folder_after_terminate=False)
     
     automl.fit(X_train.copy(), y_train.copy(), feat_type=categ_cols)
     automl.refit(X_train.copy(), y_train.copy())
+
+    pdb.set_trace()
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
             automl.predict(X_test))
@@ -232,14 +242,9 @@ def benchmark():
 
     test = generate_tests()
 
-    for i, m, d_id, t, s in tests():
+    for i, m, d_id, t, s in test:
         rslts = process(m, d_id, t, s)
         save_results(*rslts)
 
 if __name__ == '__main__':
-    try:
-        mp.set_start_method('forkserver')
-    except RuntimeError:
-        pass
-    
     benchmark() # run benchmarking locally

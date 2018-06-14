@@ -3,6 +3,7 @@
 import boto3
 import pickle
 import numpy as np
+import pandas as pd
 
 from config import load_config
 from benchmark import generate_tests
@@ -72,6 +73,22 @@ def get_failures():
     failures =  [ run for run in data if run[0] not in keys ]
 
     return failures
+
+
+def generate_smart_reruns(missing_df, missing_leq=5):
+    counts = missing_df.groupby('MODEL')['DATASET_ID'].value_counts()
+    counts = counts[counts <= missing_leq]
+    indicies = counts.index.values.tolist()
+    missing_df = missing_df.set_index(['MODEL', 'DATASET_ID'])
+    filtered_df = missing_df.loc[indicies].reset_index(level=['MODEL', 'DATASET_ID'])
+    ret_list = filtered_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED']].values.tolist() # puts it in order
+
+    return ret_list
+
+def reruns_wrapper():
+    runs_df = pd.read_csv('./compiled_results.csv', header=0)
+    missing_df = pd.DataFrame(get_failures(), columns=['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED'])
+    return generate_smart_reruns(missing_df)
 
 
 if __name__ == '__main__':
