@@ -7,46 +7,13 @@ import numpy as np
 from config import load_config
 from benchmark import generate_tests
 
-#Sends the job to amazon batch
-def create_job(name, queue, definition, size, s3_bucket, s3_folder, vcpus = 1, memory = 1024):
-
-    batch = boto3.client('batch')
-
-    batch.submit_job(jobName=name,
-                     jobQueue=queue,
-                     arrayProperties={"size":size},
-                     jobDefinition=definition,
-                     containerOverrides={"vcpus":vcpus,"memory":memory,
-                     "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]},
-                     timeout={'attemptDurationSeconds':12600})
+from dispatcher import execute_methods
+from baremetal import BareDispatch
+from aws_batch import AWSBatchDispatch
 
 def benchmark(get_tests):
-    
-    #Load config
-    config = load_config()
-    job_def = config["job_definition_id"]
-    job_queue_id = config["job_queue_id"]
-    job_name = config["job_name"]
-    s3_bucket = config["s3_bucket_root"]
-    s3_folder = config["s3_folder"]
-
-    #Define batch resources
-    vcpus = 2
-    memory = 3500
-
-    #Generate combinations
-    s3 = boto3.resource('s3')
-    with open("tests.dat", "wb") as f:
-        tests = get_tests()
-        size = len(tests)
-        pickle.dump(tests, f)
-    with open("tests.dat", "rb") as f:
-        s3.Bucket(s3_bucket).put_object(Key=s3_folder+"tests.dat", Body = f)
-
-    
-    create_job(job_name, job_queue_id, job_def, size, s3_bucket, s3_folder, vcpus, memory)
-
-
+    """Splits data between benchmarking implementations"""
+    execute_methods(get_tests)
 
 def partial(nums, models):
     

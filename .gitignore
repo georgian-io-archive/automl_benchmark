@@ -112,3 +112,4 @@ compiled_results.csv
 tests.dat
 ssh/*
 !ssh/config
+*.tar.gz

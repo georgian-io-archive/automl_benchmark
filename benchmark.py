@@ -16,7 +16,7 @@ MIN_MEM = '6g'
 MAX_MEM = '6g'
 N_CORES = 2
 
-def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
+def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args):
     """Function that trains and tests data using auto-sklearn"""
 
     from autosklearn.classification import AutoSklearnClassifier
@@ -45,7 +45,7 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
             automl.predict(X_test))
 
-def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
+def process_tpot(X_train, X_test, y_train, df_types, m_type, seed, *args):
     """Function that trains and tests data using tpot"""
 
     from tpot import TPOTClassifier
@@ -84,15 +84,16 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
     return (automl.predict_proba(X_test.values) if m_type == 'classification' else 
             automl.predict(X_test.values))
 
-def process_h2o(X_train, X_test, y_train, df_types, m_type, seed):
+def process_h2o(X_train, X_test, y_train, df_types, m_type, seed,*args):
     """Function that trains and tests data using h2o's AutoML"""
 
     import h2o
     from h2o.automl import H2OAutoML
 
+    ip = args[0] if len(args) > 0 else '127.0.0.1'
     port = np.random.randint(5555,8888)
 
-    h2o.init(ip='127.0.0.1', port=port, min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=N_CORES, ice_root='/tmp/')
+    h2o.init(ip=ip, port=port, min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, nthreads=N_CORES, ice_root='/tmp/')
     aml = H2OAutoML(max_runtime_secs=TIME_PER_TASK, seed=seed)
     dd = h2o.H2OFrame(pd.concat([X_train, y_train], axis=1))
     td = h2o.H2OFrame(X_test)
@@ -110,7 +111,7 @@ def process_h2o(X_train, X_test, y_train, df_types, m_type, seed):
     return (response[1:].as_data_frame().values if m_type == 'classification' else 
             response.as_data_frame().values.ravel())
 
-def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed):
+def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed, *args):
     """Function that trains and tests data using auto_ml"""
 
     from auto_ml import Predictor
@@ -163,7 +164,7 @@ def parse_open_ml(d_id, seed):
     return X_train, X_test, y_train, y_test, df_types
 
 
-def process(m_name, d_id, m_type, seed):
+def process(m_name, d_id, m_type, seed, *args):
     """Routing function to call and process the results of each ml model
     Args:
         m_name (str): name of the automl model
@@ -181,7 +182,7 @@ def process(m_name, d_id, m_type, seed):
                   'h2o': process_h2o,
                   'auto_ml': process_auto_ml}
     X_train, X_test, y_train, y_test, df_types = parse_open_ml(d_id, seed)
-    y_hat = model_dict.get(m_name, error)(X_train, X_test, y_train, df_types, m_type, seed)
+    y_hat = model_dict.get(m_name, error)(X_train, X_test, y_train, df_types, m_type, seed, *args)
     rmse, r2_score = (np.nan, np.nan)
     log_loss, f1_score = (np.nan, np.nan)
     if m_type == 'classification':
