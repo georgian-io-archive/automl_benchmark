@@ -13,10 +13,10 @@ def execute():
     s3_folder = os.getenv("S3_FOLDER","")
     task = os.getenv("TASK")
 
-    single_dataset(test[1])
     s3 = boto3.resource('s3')
 
     test = task[1:-1].split(',')
+    single_dataset(test[1])
     results = process(test[1], test[2], test[3], int(test[4]))
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
