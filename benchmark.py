@@ -241,7 +241,7 @@ def benchmark():
 
     test = generate_tests()
 
-    for i, m, d_id, t, s in tests():
+    for i, m, d_id, t, s in test:
         rslts = process(m, d_id, t, s)
         save_results(*rslts)
 
