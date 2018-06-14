@@ -71,12 +71,12 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
     # default cv is 5
     if m_type == 'classification':
         automl = TPOTClassifier(generations=100,
-                                population_size=2,
+                                population_size=100,
                                 config_dict=classifier_config_dict,
                                 verbosity=3,
                                 max_time_mins=int(TIME_PER_TASK/60),
                                 scoring='f1_weighted',
-                                # n_jobs=N_CORES,
+                                n_jobs=N_CORES,
                                 random_state=seed)
     else:
         automl = TPOTRegressor(generations=100, 
