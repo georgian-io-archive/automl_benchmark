@@ -11,6 +11,7 @@ from dispatcher import Dispatcher, AutoMLMethods
 class AWSBatchDispatch(Dispatcher):
 
     #Sends the job to amazon batch
+    @staticmethod
     def create_job(name, queue, definition, size, s3_bucket, s3_folder, vcpus = 1, memory = 1024):
 
         batch = boto3.client('batch')
@@ -23,8 +24,11 @@ class AWSBatchDispatch(Dispatcher):
                  "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]},
                  timeout={'attemptDurationSeconds':12600})
 
+    @classmethod
+    def process(cls, tests):
 
-    def process(tests):
+        if not tests:
+            return
 
         #Load config
         config = load_config()

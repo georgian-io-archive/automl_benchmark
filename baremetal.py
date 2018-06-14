@@ -50,8 +50,11 @@ class BareDispatch(Dispatcher):
             p.wait()
 
     @classmethod
-    def process(cls,tests):
+    def process(cls, tests):
         """Main function to schedule h2o jobs"""
+
+        if not tests:
+            return
 
         #Load config
         config = load_config()
