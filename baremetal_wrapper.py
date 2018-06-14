@@ -15,7 +15,7 @@ def execute():
 
     s3 = boto3.resource('s3')
 
-    test = task[1:-1].split(',')
+    test = ','.split(task[1:-1])
     single_dataset(test[1])
     results = process(test[1], test[2], test[3], int(test[4]))
 
