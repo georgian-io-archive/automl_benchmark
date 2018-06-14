@@ -4,18 +4,16 @@ import os
 
 import boto3
 
-from config import load_config
 from benchmark import process
 from get_datasets import single_dataset
 
 def execute():
 
-    config = load_config()
-    s3_bucket = config["s3_bucket"]
-    s3_folder = config["s3_folder"]
+    s3_bucket = os.getenv("S3_BUCKET")
+    s3_folder = os.getenv("S3_FOLDER","")
     task = os.getenv("TASK")
 
-    single_dataset(dataset)
+    single_dataset(test[1])
     s3 = boto3.resource('s3')
 
     test = task[1:-1].split(',')
