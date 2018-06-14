@@ -111,5 +111,6 @@ batch.config
 compiled_results.csv
 tests.dat
 ssh/*
-!ssh/config
+!ssh/baremetal
+!ssh/batch
 *.tar.gz

@@ -1,0 +1,5 @@
+#SSH Information for git repository
+HOST *
+ StrictHostKeyChecking no
+ User ec2-user
+ IdentityFile ~/.ssh/aws
