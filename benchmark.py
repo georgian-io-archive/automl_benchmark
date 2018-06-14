@@ -1,7 +1,13 @@
 #!/usr/bin/env python
 
-import signal
 import multiprocessing as mp
+if __name__ == '__main__':
+    # this needs to be here because other libs import mp
+    try:
+        mp.set_start_method('forkserver')
+    except RuntimeError:
+        print('Failed to set forkserver')
+import signal
 
 import numpy as np
 import pandas as pd
@@ -18,6 +24,8 @@ N_CORES = 2
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
     """Function that trains and tests data using auto-sklearn"""
+
+    
 
     from autosklearn.classification import AutoSklearnClassifier
     from autosklearn.regression import AutoSklearnRegressor
@@ -42,6 +50,8 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed):
     automl.fit(X_train.copy(), y_train.copy(), feat_type=categ_cols)
     automl.refit(X_train.copy(), y_train.copy())
 
+    pdb.set_trace()
+
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
             automl.predict(X_test))
 
@@ -61,12 +71,12 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed):
     # default cv is 5
     if m_type == 'classification':
         automl = TPOTClassifier(generations=100,
-                                population_size=100,
+                                population_size=2,
                                 config_dict=classifier_config_dict,
                                 verbosity=3,
                                 max_time_mins=int(TIME_PER_TASK/60),
                                 scoring='f1_weighted',
-                                n_jobs=N_CORES,
+                                # n_jobs=N_CORES,
                                 random_state=seed)
     else:
         automl = TPOTRegressor(generations=100, 
@@ -236,9 +246,4 @@ def benchmark():
         save_results(*rslts)
 
 if __name__ == '__main__':
-    try:
-        mp.set_start_method('forkserver')
-    except RuntimeError:
-        pass
-    
     benchmark() # run benchmarking locally
