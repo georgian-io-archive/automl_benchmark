@@ -1,4 +1,5 @@
 
+import threading
 
 _registry = []
 
@@ -7,8 +8,14 @@ def _register_class(target):
     _registry += [target]
 
 def execute_methods(method):
+    threads = []
     for cls in _registry:
-        cls.execute(method)
+        t = threading.Thread(target=cls.execute, args=(method,))
+        threads.append(t)
+        t.start()
+    print("Waiting for execution of all methods to finish...")
+    for t in threads: t.join()
+        #cls.execute(method)
 
 class AutoMLMethods(object):
     def __init__(self, *args):

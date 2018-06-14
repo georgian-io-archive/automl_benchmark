@@ -51,6 +51,6 @@ class AWSBatchDispatch(Dispatcher):
             s3.Bucket(s3_bucket).put_object(Key=s3_folder+"tests.dat", Body = f)
 
         
-        create_job(job_name, job_queue_id, job_def, size, s3_bucket, s3_folder, vcpus, memory)
+        cls.create_job(job_name, job_queue_id, job_def, size, s3_bucket, s3_folder, vcpus, memory)
 
 
