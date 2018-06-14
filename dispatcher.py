@@ -31,8 +31,8 @@ class Register(type):
 
 class Dispatcher(object, metaclass=Register):
 
-    @staticmethod
-    def process(tests):
+    @classmethod
+    def process(cls,tests):
         raise NotImplementedError("Function not implemented")
         
     @staticmethod
