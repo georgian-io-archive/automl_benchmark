@@ -15,7 +15,8 @@ class BareDispatch(Dispatcher):
         """Provisions spot EC2 instances with H2O AMI"""
         ec2 = boto3.resource('ec2')
         instances = ec2.create_instances(ImageId='ami-14c5486b',InstanceType='c4.xlarge',MinCount=num,MaxCount=num,
-                                         LaunchTemplate={'LaunchTemplateId':'lt-0837f52ac031b2719'})
+                                         LaunchTemplate={'LaunchTemplateId':'lt-0837f52ac031b2719'},
+                                         InstanceMarketOptions={'MarketType':'spot','SpotOptions':{'SpotInstanceType':'one-time'}})
         ips = []
         for i in instances:
             ip = None
@@ -48,8 +49,9 @@ class BareDispatch(Dispatcher):
         s3_cmd = 'sudo S3_BUCKET=' + bucket_name + ' S3_FOLDER=' + s3_folder
         task_cmds = ' && '.join([s3_cmd + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' ' + exec_cmd for t in tests])
         cmd = ssh_cmd + ' "' + task_cmds + '"'
+        print(cmd)
         p = subprocess.Popen(cmd, shell=True)
-        p.wait()
+        
 
     @classmethod
     def process(cls, tests):
@@ -66,7 +68,7 @@ class BareDispatch(Dispatcher):
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(s3_bucket)
 
-        instances, ips = cls.provision_instances(5, s3_bucket)
+        instances, ips = cls.provision_instances(26, s3_bucket)
         threads = []
 
         for i, c in enumerate(cls.chunk(tests, len(ips))):
@@ -77,7 +79,5 @@ class BareDispatch(Dispatcher):
         for t in threads:
             t.join()
 
-
-        for i in instances:
-            i.reload()
-            i.terminate()
+        with open("running.dat", "wb") as f:
+            pickle.dump(instances, f)
