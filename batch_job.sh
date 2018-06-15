@@ -6,7 +6,7 @@ export _JAVA_OPTIONS='-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimit
 #Setup RSA
 aws s3 cp --recursive s3://${S3_BUCKET}/${S3_FOLDER}ssh ~/.ssh
 chmod -R 400 ~/.ssh
-chmod 755 ~/.ssh/config
+chmod 755 ~/.ssh/batch
 
 #Install swig
 ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/cc1plus
