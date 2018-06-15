@@ -64,7 +64,7 @@ class BareDispatch(Dispatcher):
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(s3_bucket)
 
-        instances, ips = cls.provision_instances(1, s3_bucket)
+        instances, ips = cls.provision_instances(5, s3_bucket)
         threads = []
 
         for i, c in enumerate(cls.chunk(tests, len(ips))):
