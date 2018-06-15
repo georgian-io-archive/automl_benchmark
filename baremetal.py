@@ -43,11 +43,13 @@ class BareDispatch(Dispatcher):
 
     @staticmethod
     def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder):
-        for t in tests:
-
-            print('ssh -F ssh/baremetal ' + ip + ' "sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' bash -s" < baremetal_job.sh')
-            p = subprocess.Popen('ssh -F ssh/baremetal ' + ip + ' "sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' bash -s" < baremetal_job.sh', shell=True)
-            p.wait()
+        ssh_cmd = 'ssh -F ssh/baremetal ' + ip
+        exec_cmd = 'nohup bash /root/automl_benchmark/baremetal_job.sh > logs.out 2>&1 &'
+        s3_cmd = 'sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder
+        task_cmds = ';'.join([s3_cmd + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' ' + exec_cmd for t in tests])
+        cmd = ssh_cmd + ' "' + task_cmds + '"'
+        p = subprocess.Popen(cmd, shell=True)
+        p.wait()
 
     @classmethod
     def process(cls, tests):
