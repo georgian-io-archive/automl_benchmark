@@ -44,9 +44,9 @@ class BareDispatch(Dispatcher):
     @staticmethod
     def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder):
         ssh_cmd = 'ssh -F ssh/baremetal ' + ip
-        exec_cmd = 'nohup bash /root/automl_benchmark/baremetal_job.sh > logs.out 2>&1 &'
-        s3_cmd = 'sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder
-        task_cmds = ';'.join([s3_cmd + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' ' + exec_cmd for t in tests])
+        exec_cmd = 'nohup bash /root/automl_benchmark/baremetal_job.sh > logs.out 2>&1'
+        s3_cmd = 'sudo S3_BUCKET=' + bucket_name + ' S3_FOLDER=' + s3_folder
+        task_cmds = ' && '.join([s3_cmd + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' ' + exec_cmd for t in tests])
         cmd = ssh_cmd + ' "' + task_cmds + '"'
         p = subprocess.Popen(cmd, shell=True)
         p.wait()
@@ -76,6 +76,7 @@ class BareDispatch(Dispatcher):
 
         for t in threads:
             t.join()
+
 
         for i in instances:
             i.reload()
