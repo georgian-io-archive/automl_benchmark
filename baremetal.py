@@ -24,7 +24,7 @@ class BareDispatch(Dispatcher):
         print("Provisioning Servers...")
         time.sleep(60)
         prov = []
-        for ip in ips: prov.append(subprocess.Popen('ssh -F ssh/config ec2-user@' + ip + ' "sudo S3_BUCKET=' + s3_bucket  +  ' bash -s" < provision_baremetal.sh', shell=True))
+        for ip in ips: prov.append(subprocess.Popen('ssh -F ssh/baremetal ec2-user@' + ip + ' "sudo S3_BUCKET=' + s3_bucket  +  ' bash -s" < provision_baremetal.sh', shell=True))
         codes = [p.wait() for p in prov]
         print("Servers successfully provisioned")
         return instances, ips
@@ -45,8 +45,8 @@ class BareDispatch(Dispatcher):
     def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder):
         for t in tests:
 
-            print('ssh -F ssh/config ' + ip + ' "sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' bash -s" < baremetal_job.sh')
-            p = subprocess.Popen('ssh -F ssh/config ' + ip + ' "sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' bash -s" < baremetal_job.sh', shell=True)
+            print('ssh -F ssh/baremetal ' + ip + ' "sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' bash -s" < baremetal_job.sh')
+            p = subprocess.Popen('ssh -F ssh/baremetal ' + ip + ' "sudo S3_BUCKET=' + bucket_name  +  ' S3_FOLDER=' + s3_folder + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' bash -s" < baremetal_job.sh', shell=True)
             p.wait()
 
     @classmethod

@@ -1,22 +1,9 @@
 #!/usr/bin/env python
 
-import multiprocessing as mp
-if __name__ == '__main__':
-    # this needs to be here because other libs import mp
-    try:
-        mp.set_start_method('forkserver')
-    except RuntimeError:
-        print('Failed to set forkserver')
-
 import os
 import pickle
 import boto3
 import time
-
-import numpy as np
-
-from benchmark import process
-from get_datasets import single_dataset
 
 def check_file(s3, s3_bucket,s3_folder,key):
     """Checks if a file exists in a s3 folder"""
@@ -50,10 +37,20 @@ def execute():
     dtype = test_info[3]
     seed = test_info[4]
 
+    if model == 'tpot':
+        import multiprocessing as mp
+        # this needs to be here because other libs import mp
+        try:
+            mp.set_start_method('forkserver')
+        except RuntimeError:
+            print('Failed to set forkserver')
+
     #Download dataset
+    from get_datasets import single_dataset
     single_dataset(dataset)
 
     #Execute benchmark
+    from benchmark import process
     results = process(model, dataset, dtype, seed)
 
     #Upload results to s3
