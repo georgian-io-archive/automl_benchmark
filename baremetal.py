@@ -3,6 +3,7 @@ import boto3
 import threading
 import subprocess
 import time
+import pickle
 
 from config import load_config
 from dispatcher import Dispatcher, AutoMLMethods
