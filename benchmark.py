@@ -18,8 +18,8 @@ from tqdm import tqdm
 
 TIME_PER_TASK = 10800 # seconds (3 hours)
 GRACE_PERIOD = 300
-MIN_MEM = '2g'
-MAX_MEM = '7g'
+MIN_MEM = '7g'
+MAX_MEM = '100g'
 N_CORES = 2
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args):
@@ -101,7 +101,7 @@ def process_h2o(X_train, X_test, y_train, df_types, m_type, seed,*args):
     ip = args[0] if len(args) > 0 else '127.0.0.1'
     port = np.random.randint(5555,8888)
 
-    h2o.init(ip=ip, port=port, nthreads=N_CORES, ice_root='/tmp/')
+    h2o.init(ip=ip, port=port, nthreads=N_CORES, min_mem_size=MIN_MEM, max_mem_size=MAX_MEM, ice_root='/tmp/')
     aml = H2OAutoML(max_runtime_secs=TIME_PER_TASK, seed=seed)
     dd = h2o.H2OFrame(pd.concat([X_train, y_train], axis=1))
     td = h2o.H2OFrame(X_test)
