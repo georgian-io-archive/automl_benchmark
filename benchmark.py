@@ -116,9 +116,12 @@ def process_h2o(X_train, X_test, y_train, df_types, m_type, seed,*args):
 
     aml.train(y = 'target', training_frame = dd)
     response = aml.predict(td)
-    h2o.cluster().shutdown()
-    return (response[1:].as_data_frame().values if m_type == 'classification' else 
+    pred =  (response[1:].as_data_frame().values if m_type == 'classification' else 
             response.as_data_frame().values.ravel())
+
+    h2o.cluster().shutdown()
+
+    return pred
 
 def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed, *args):
     """Function that trains and tests data using auto_ml"""
