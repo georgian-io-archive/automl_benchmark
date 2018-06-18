@@ -19,7 +19,7 @@ def execute():
     print(task[1:-1])
     test = task[1:-1].split(",")
     print(test)
-    single_dataset(test[2])
+    single_dataset(test[2], use_cache=True)
     results = process(test[1], test[2], test[3], int(test[4]))
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")

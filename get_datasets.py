@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 
+import argparse
 import os
 
+import boto3
 import openml
 import numpy as np
 import scipy
 import pandas as pd
 from tqdm import tqdm
+
+from config import load_config
 
 MAX_SPACE = 10000000
 
@@ -77,6 +81,36 @@ def _get_study(s_id, s_name):
     study_df.to_csv('./datasets/study_{}_info.csv'.format(s_name), index=False)
 
 
+def _get_from_s3(d_id):
+    """Downloads dataset from robust S3 bucket cache"""
+    config = load_config()    
+    s3_bucket = config["s3_bucket_root"]
+    s3_folder = config["s3_folder"]
+
+    s3 = boto3.resource('s3')
+    with open("datasets/" + str(d_id) + ".csv", "wb") as f:
+        s3.Bucket(s3_bucket).download_fileobj(s3_folder + "datasets/" + str(d_id) + ".csv",  f)
+    with open("datasets/" + str(d_id) + "_types.csv", "wb") as f:
+        s3.Bucket(s3_bucket).download_fileobj(s3_folder + "datasets/" + str(d_id) + "_types.csv",  f)
+
+def _upload_datasets():
+    """Uploads datasets to S3 cache"""
+    config = load_config()
+    s3_bucket = config["s3_bucket_root"]
+    s3_folder = config["s3_folder"]
+
+    s3 = boto3.resource('s3')
+
+    for subdir, dirs, files in os.walk("datasets"):
+        for file in tqdm(files):
+            try:
+                with open("datasets/" + file, 'rb') as data:
+                    data.seek(0)
+                    key = s3_folder + 'datasets/' + file
+                    s3.Bucket(s3_bucket).put_object(Key=key, Body=data)
+            except Exception as e:
+                print('Error Saving File: ,', str(e))
+
 def get_studies():
     """Collects the data for a specified set of openml 'studies'"""
     studies = [[130, 'regression'],
@@ -87,11 +121,22 @@ def get_studies():
     for s in studies:
         _get_study(*s)
 
-def single_dataset(d_id):
+def single_dataset(d_id, use_cache=False):
     """Downloads a single dataset"""
     _make_data_dir()
-    _save_dataset_data(d_id)
 
+    if not use_cache:
+        _save_dataset_data(d_id)
+    else:
+        _get_from_s3(d_id)
 
 if __name__ == '__main__':
-    get_studies()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--upload", help="Upload datasets to S3 cache", action="store_true")
+    args = parser.parse_args()
+
+    #get_studies()
+
+    if args.upload:
+        _upload_datasets()
+    

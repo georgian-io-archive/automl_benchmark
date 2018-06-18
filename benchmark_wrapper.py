@@ -47,7 +47,7 @@ def execute():
 
     #Download dataset
     from get_datasets import single_dataset
-    single_dataset(dataset)
+    single_dataset(dataset, use_cache=True)
 
     #Execute benchmark
     from benchmark import process
