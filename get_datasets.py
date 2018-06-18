@@ -83,9 +83,8 @@ def _get_study(s_id, s_name):
 
 def _get_from_s3(d_id):
     """Downloads dataset from robust S3 bucket cache"""
-    config = load_config()    
-    s3_bucket = config["s3_bucket_root"]
-    s3_folder = config["s3_folder"]
+    s3_bucket = os.getenv("S3_BUCKET","")
+    s3_folder = os.getenv("S3_FOLDER", "")
 
     s3 = boto3.resource('s3')
     with open("datasets/" + str(d_id) + ".csv", "wb") as f:
