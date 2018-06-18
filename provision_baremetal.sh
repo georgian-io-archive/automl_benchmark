@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 
+#Setup swap space
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/xvdb
+  n # new partition
+  p # primary partition
+  1 # partition number 1
+    # default - start at beginning of disk 
+    # default - go to end of disk
+  t # change type
+ 82 # set type to swap
+  w # write the partition table
+EOF
+
+mkswap /dev/xvdb1
+swapon /dev/xvdb1
+
 yum -y install openssh openssh-clients unzip aws-cli git python36 python36-devel
 yum -y groupinstall 'Development Tools'
 yum -y install wget java-1.8.0-openjdk antlr-tool autoconf boost-devel expat-devel libcurl-devel gcc-c++ pcre-devel

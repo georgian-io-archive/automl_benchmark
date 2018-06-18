@@ -91,5 +91,14 @@ def reruns_wrapper():
     return generate_smart_reruns(missing_df)
 
 
+def cleanup():
+
+    with open("running.dat", "rb") as f:
+        dat = pickle.load(f)
+
+    for i in dat:
+        i.reload()
+        i.terminate()
+
 if __name__ == '__main__':
     benchmark(generate_tests)
