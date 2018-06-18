@@ -82,17 +82,25 @@ if __name__ == '__main__':
         seed = test_info[4]
 
         err = str(e).encode("utf-8")
-        key = s3_folder + "err/" + model + "/" + str(runid) + "-"  + dataset + "-" + dtype + "-" + str(seed)
+        key = '{}err/{}/{}-{}-{}-{}'.format(s3_folder, model, runid, dataset, dtype, seed)
         s3.Bucket(s3_bucket).put_object(Key=key, Body=err)
 
         for subdir, dirs, files in os.walk("/tmp"):
             for file in files:
-                full_path = os.path.join(subdir, file)
-                with open(full_path, 'rb') as data:
-                    data.seek(0)
+                try:
+                    full_path = os.path.join(subdir, file)
                     print(full_path)
-                    try:
-                        s3.Bucket(s3_bucket).put_object(Key=s3_folder + "err/tmp/" + model + str(runid) + "-" + dataset + "-" + dtype + "-" + str(seed) + "/" + full_path[len("/tmp")+1:], Body=data)
-                    except Exception as e:
-                        print('Error Saving File: ,', str(e))
+                    with open(full_path, 'rb') as data:
+                        data.seek(0)
+                        key = '{}err/tmp/{}-{}-{}-{}-{}/{}'.format(s3_folder, 
+                                                                  model, 
+                                                                  runid, 
+                                                                  dataset, 
+                                                                  dtype, 
+                                                                  seed, 
+                                                                  full_path[len('/tmp')+1:])
+                        print(key)
+                        s3.Bucket(s3_bucket).put_object(Key=key, Body=data)
+                except Exception as e:
+                    print('Error Saving File: ,', str(e))
 
