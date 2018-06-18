@@ -23,7 +23,7 @@ def execute():
     results = process(test[1], test[2], test[3], int(test[4]))
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
-    key = (s3_folder+"out/"+"results" + str(runid) +".csv")
+    key = (s3_folder+"out/"+"results" + str(test[0]) +".csv")
     s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
 
 
