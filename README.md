@@ -29,3 +29,6 @@ $ source automl_benchmark/bin/activate
 
 ## Run the benchmarking
 * TODO
+
+Note: create matplotlib backend workaround note
+https://github.com/pypa/virtualenv/issues/54#issuecomment-223204279

@@ -29,7 +29,7 @@ def extract():
     s3_bucket = cfg["s3_bucket_root"]
     s3_folder = cfg["s3_folder"]
 
-    RANGE = len(generate_tests()) + 1
+    RANGE = len(generate_tests())
 
     with open("compiled_results.csv", "wb") as f:
         f.write('ID,MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n'.encode('utf-8'))
