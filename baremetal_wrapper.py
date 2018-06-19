@@ -19,11 +19,11 @@ def execute():
     print(task[1:-1])
     test = task[1:-1].split(",")
     print(test)
-    single_dataset(test[2])
+    single_dataset(test[2], use_cache=True)
     results = process(test[1], test[2], test[3], int(test[4]))
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
-    key = (s3_folder+"out/"+"results" + str(runid) +".csv")
+    key = (s3_folder+"out/"+"results" + str(test[0]) +".csv")
     s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
 
 

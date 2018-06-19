@@ -8,7 +8,7 @@ import pickle
 from config import load_config
 from dispatcher import Dispatcher, AutoMLMethods
 
-@AutoMLMethods('h2o')
+@AutoMLMethods('h2o','auto-sklearn','auto_ml','tpot')
 class BareDispatch(Dispatcher):
 
     @staticmethod
@@ -69,7 +69,7 @@ class BareDispatch(Dispatcher):
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(s3_bucket)
 
-        instances, ips = cls.provision_instances(26, s3_bucket)
+        instances, ips = cls.provision_instances(168, s3_bucket)
         threads = []
 
         for i, c in enumerate(cls.chunk(tests, len(ips))):
@@ -81,4 +81,4 @@ class BareDispatch(Dispatcher):
             t.join()
 
         with open("running.dat", "wb") as f:
-            pickle.dump(instances, f)
+            pickle.dump([i.instance_id for i in instances], f)
