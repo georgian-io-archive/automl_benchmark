@@ -125,7 +125,8 @@ def pairwise_comp_viz(mu_df, target):
         # difference from y=x color mapping (not magnitude because independent)
         colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
 
-        sc = ax.scatter(m1_values, m2_values, s=15, c=colors, cmap=cmap, zorder=10)
+        sc = ax.scatter(m1_values, m2_values, s=15, c=colors, cmap='bwr', zorder=10, 
+            norm=MidpointNormalize(midpoint=0))
         ax.set_xlabel(m1)
         ax.set_ylabel(m2)
         ax.axhline(c='black', lw=1, alpha=0.5)
@@ -139,6 +140,20 @@ def pairwise_comp_viz(mu_df, target):
         ax.set_xlim(lims)
         ax.set_ylim(lims)
 
+        return sc
+
+    class MidpointNormalize(mpl.colors.Normalize):
+        """
+        class to help renormalize the color scale
+        """
+        def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
+            self.midpoint = midpoint
+            gamma = 0.1
+            mpl.colors.PowerNorm.__init__(self, gamma, vmin, vmax, clip)
+
+        def __call__(self, value, clip=None):
+            x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
+            return np.ma.masked_array(np.interp(value, x, y))
 
     mu_df = mu_df[target]
 
@@ -149,18 +164,18 @@ def pairwise_comp_viz(mu_df, target):
     fig, ax_list = plt.subplots(rows, cols)
     mname = target.replace('_', ' ').title()
     base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.6), (0.8, 0.7, 0.6), plot_count)]
-    model_colors = {m: c for m in models for c in base_colors}
-    m2_pos_colors = [c.hex for c in Color('white').range_to(Color(base_colors[0]), 5)]
-    color_len = 10
+    model_colors = {m: c for m, c in zip(models, base_colors)}
+    color_len = 100
+    scatters = []
     for combo, ax in zip(combos, ax_list):
         m1, m2 = combo
-        m2_colors = [c.hex_l for c in Color('white').range_to(Color(model_colors[m1]), color_len)]
-        m1_colors = [c.hex_l for c in Color(model_colors[m1]).range_to(Color('white'), color_len)]
+        m2_colors = [c.hex_l for c in Color('black').range_to(Color(model_colors[m1]), color_len)]
+        m1_colors = [c.hex_l for c in Color(model_colors[m1]).range_to(Color('black'), color_len)]
         cmap = mpl.colors.ListedColormap(m1_colors[:-1]+m2_colors)
-        # cmap.set_over(m2_colors[-1])
-        # cmap.set_under(m1_colors[0])
-        plot_comp(mu_df, m1, m2, cmap=cmap, metric_name=mname, ax=ax)
 
+        scatters.append(plot_comp(mu_df, m1, m2, cmap=cmap, metric_name=mname, ax=ax))
+    for sc, ax in zip(scatters, ax_list):
+        plt.colorbar(sc, ax=ax)
     plt.show()
 
 
