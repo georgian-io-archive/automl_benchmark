@@ -55,18 +55,16 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
         An augmented pandas dataframe with removed datasets
     """
 
-    pp.pprint('Total Missing data points: {}'.format(len(missing_df)))
+    print('Total Missing data points: {}'.format(len(missing_df)))
     counts = missing_df.groupby(['TYPE', 'MODEL'])['DATASET_ID'].value_counts()
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
     drop_dids = np.unique(drop_datasets).tolist()
-    pp.pprint('Datasets to be dropped...')
-    pp.pprint(counts, '\n\n')
-
+    print('Datasets to be dropped...')
+    pp.pprint(counts)
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
-    missing_df = missing_df[~missing_df['DATASET_ID'].isin(drop_dids)]
 
-    return runs_df, missing_df
+    return runs_df
 
 def drop_missing_runs(runs_df, missing_df):
     """In order to make the comparisons even across models, all runs that did not complete in one
@@ -121,9 +119,12 @@ def pairwise_comp_viz(mu_df, target):
         rslts = [c, int(n/c)]
         return min(rslts), max(rslts)
 
-    def plot_comp(mu_df, m1, m2, vmin, vmax, cmap, ax):
+    def plot_comp(mu_df, m1, m2, target, vmin, vmax, cmap, ax):
         m1_values = mu_df.xs(m1, level=1).values
         m2_values = mu_df.xs(m2, level=1).values
+        if target == 'RMSE':
+            ax.set_yscale('log')
+            ax.set_xscale('log')
 
         # difference from y=x color mapping (not magnitude because independent)
         colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
@@ -167,8 +168,11 @@ def pairwise_comp_viz(mu_df, target):
     plot_count = len(combos)
     rows, cols = square_fac(plot_count)
     fig, ax_list = plt.subplots(rows, cols)
-    fig.set_size_inches(18, 10)
-    metric_name = target.replace('_', ' ').title()
+    if target == 'RMSE':
+        fig.set_size_inches(18, 10)
+    else:
+        fig.set_size_inches(18, 10)
+    metric_name = target.replace('_', ' ').title() if target == 'F1_SCORE' else target
     base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), plot_count)]
     model_colors = {m: c for m, c in zip(models, base_colors)}
     color_bins = 10
@@ -190,18 +194,19 @@ def pairwise_comp_viz(mu_df, target):
         m1, m2 = combo
         color_range = get_color_range(Color(model_colors[m1]), Color(model_colors[m2]), color_bins)
         cmap = mpl.colors.ListedColormap(color_range)
-        scatters.append(plot_comp(mu_df, m1, m2, vmin, vmax, cmap, ax))
+        scatters.append(plot_comp(mu_df, m1, m2, target, vmin, vmax, cmap, ax))
 
     for sc, ax in zip(scatters, ax_list.ravel()):
         cbar = fig.colorbar(sc, ax=ax) # fraction=0.046, pad=0.04,
         cbar.ax.tick_params(labelsize=10)
         cbar.set_label('Normalized {} Difference'.format(metric_name), rotation=90, fontsize=8,
-            labelpad=-55)
+            labelpad=-55 if target == 'F1_SCORE' else -65)
 
     fig.suptitle('Dataset Mean {} Across Frameworks'.format(metric_name))
     if not os.path.exists('figures'):
         os.makedirs('figures')
     plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=1000)
+    # plt.show()
 
 
 def per_model_mean_std(runs_df):
@@ -234,37 +239,26 @@ def analysis_suite():
     """An automatic suite that performs analysis on the computed results of the benchmarking process"""
 
     runs_df = pd.read_csv('./compiled_results.csv')
-
-    # runs_df = runs_df[runs_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
-
     missing_df = compute_missing_runs(runs_df)
-    # missing_df = missing_df[missing_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
-
-    runs_df, missing_df = drop_missing_datasets(runs_df, missing_df, 10)
+    runs_df = drop_missing_datasets(runs_df, missing_df, 10)
     runs_df = drop_missing_runs(runs_df, missing_df)
-
     c_df, r_df = split_by_type(runs_df)
-
-    # data_distributions(c_df, 'F1_SCORE')
-    # perform_statistical_analysis(c_df)
-
     cd_mu, cd_std = per_dataset_mean_std(c_df)
-    # print('Classification per dataset means...\n', cd_mu)
-    # print('Classification per dataset standard deviation...\n', cd_std)
+    rd_mu, rd_std = per_dataset_mean_std(r_df)
+    c_mu, c_std = per_model_mean_std(c_df)
+    r_mu, r_std = per_model_mean_std(r_df)
 
+    print('Creating classification visualization...')
     pairwise_comp_viz(cd_mu, target='F1_SCORE')
 
-    rd_mu, rd_std = per_dataset_mean_std(r_df)
-    # print('Regression per dataset means...\n', rd_mu)
-    # print('Regression per dataset standard deviation...\n', rd_std)
+    print('Creating regression visualization...')
+    pairwise_comp_viz(rd_mu, target='RMSE')
+    
+    print('Classification per model means...\n', c_mu)
+    print('Classification per model standard deviation...\n', c_std)
 
-    # c_mu, c_std = model_mean_std(c_df)
-    # print('Classification means...\n', c_mu)
-    # print('Classification standard deviation...\n', c_std)
-
-    # r_mu, r_std = model_mean_std(r_df)
-    # print('Regression means...\n', r_mu)
-    # print('Regression standard deviation...\n', r_std)
+    print('Regression per model means...\n', r_mu)
+    print('Regression per model standard deviation...\n', r_std)
 
 
 if __name__ == '__main__':
