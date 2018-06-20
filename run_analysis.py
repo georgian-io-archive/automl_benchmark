@@ -239,6 +239,7 @@ def analysis_suite():
     """An automatic suite that performs analysis on the computed results of the benchmarking process"""
 
     runs_df = pd.read_csv('./compiled_results.csv')
+    runs_df['R2_SCORE'] = runs_df['R2_SCORE'].abs()
     missing_df = compute_missing_runs(runs_df)
     runs_df = drop_missing_datasets(runs_df, missing_df, 10)
     runs_df = drop_missing_runs(runs_df, missing_df)
