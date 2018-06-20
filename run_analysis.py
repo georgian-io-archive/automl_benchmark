@@ -55,7 +55,7 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
         An augmented pandas dataframe with removed datasets
     """
 
-    pp.pprint('Total Missing data points: ', len(missing_df))
+    pp.pprint('Total Missing data points: {}'.format(len(missing_df)))
     counts = missing_df.groupby(['TYPE', 'MODEL'])['DATASET_ID'].value_counts()
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
