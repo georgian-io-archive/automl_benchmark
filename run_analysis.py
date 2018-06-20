@@ -4,12 +4,14 @@ from pprint import PrettyPrinter
 import itertools
 import os
 
+from colour import Color, color_scale, hsl2hex
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 plt.style.use(['fivethirtyeight'])
 import matplotlib as mpl
-from colour import Color, color_scale, hsl2hex
+from scipy.stats import zscore
+from sklearn.preprocessing import MinMaxScaler
 
 from benchmark import generate_tests
 
@@ -76,8 +78,13 @@ def drop_missing_runs(runs_df, missing_df):
         A index list 
     """
     pp.pprint('Dropped dataset seed combinations...')
-    drop_tuples = missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()
+    drop_tuples = list(set(missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()))
+    dataset_missing = pd.DataFrame(drop_tuples, columns=['DATASET_ID', 'SEED'])['DATASET_ID'].value_counts()
+    drop_dids = dataset_missing[dataset_missing > 5].index.values.tolist()
+    runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
     pp.pprint(drop_tuples)
+    print('Dropped data entire data set (>5 missing after intersection)...')
+    print(drop_dids)
     runs_df = runs_df.set_index(['DATASET_ID', 'SEED'])
     runs_df = runs_df.drop(index=drop_tuples).reset_index()
     runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'RMSE', 'R2_SCORE', 'LOGLOSS', 
@@ -123,9 +130,6 @@ def pairwise_comp_viz(mu_df, target):
     def plot_comp(mu_df, m1, m2, target, vmin, vmax, cmap, ax):
         m1_values = mu_df.xs(m1, level=1).values
         m2_values = mu_df.xs(m2, level=1).values
-        if target == 'RMSE':
-            ax.set_yscale('log')
-            ax.set_xscale('log')
 
         # difference from y=x color mapping (not magnitude because independent)
         colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
@@ -169,10 +173,7 @@ def pairwise_comp_viz(mu_df, target):
     plot_count = len(combos)
     rows, cols = square_fac(plot_count)
     fig, ax_list = plt.subplots(rows, cols)
-    if target == 'RMSE':
-        fig.set_size_inches(18, 10)
-    else:
-        fig.set_size_inches(18, 10)
+    fig.set_size_inches(18, 10)
     metric_name = target.replace('_', ' ').title() if target == 'F1_SCORE' else target
     base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), plot_count)]
     model_colors = {m: c for m, c in zip(models, base_colors)}
@@ -201,7 +202,7 @@ def pairwise_comp_viz(mu_df, target):
         cbar = fig.colorbar(sc, ax=ax) # fraction=0.046, pad=0.04,
         cbar.ax.tick_params(labelsize=10)
         cbar.set_label('Normalized {} Difference'.format(metric_name), rotation=90, fontsize=8,
-            labelpad=-55 if target == 'F1_SCORE' else -65)
+            labelpad=-55) # if target == 'F1_SCORE' else -65)
 
     fig.suptitle('Dataset Mean {} Across Frameworks'.format(metric_name))
     if not os.path.exists('figures'):
@@ -209,6 +210,15 @@ def pairwise_comp_viz(mu_df, target):
     plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=1000)
     # plt.show()
 
+
+def standardize_rmse(runs_df):
+    print('Standardizing and scaling RMSE...')
+    regression_dids = np.unique(runs_df[runs_df['TYPE'] == 'regression']['DATASET_ID'].values)
+    for d_id in regression_dids:
+        runs_df.loc[runs_df['DATASET_ID'] == d_id, 'RMSE'] = 1 - MinMaxScaler().fit_transform(zscore(
+            runs_df[runs_df['DATASET_ID'] == d_id]['RMSE'].values).reshape((-1, 1))).ravel()
+
+    return runs_df
 
 def per_model_mean_std(runs_df):
     """Computes the grouped mean and median by model type
@@ -244,6 +254,7 @@ def analysis_suite():
     missing_df = compute_missing_runs(runs_df)
     runs_df = drop_missing_datasets(runs_df, missing_df, 10)
     runs_df = drop_missing_runs(runs_df, missing_df)
+    runs_df = standardize_rmse(runs_df)
     c_df, r_df = split_by_type(runs_df)
     cd_mu, cd_std = per_dataset_mean_std(c_df)
     rd_mu, rd_std = per_dataset_mean_std(r_df)
