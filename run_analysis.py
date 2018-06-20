@@ -15,6 +15,7 @@ from benchmark import generate_tests
 
 pp = PrettyPrinter(indent=4)
 
+
 def set_print_options(rows=None, cols=None):
     """Sets the print options for pandas to show all columns or rows"""
 
@@ -248,18 +249,16 @@ def analysis_suite():
     rd_mu, rd_std = per_dataset_mean_std(r_df)
     c_mu, c_std = per_model_mean_std(c_df)
     r_mu, r_std = per_model_mean_std(r_df)
-
-    print('Creating classification visualization...')
-    pairwise_comp_viz(cd_mu, target='F1_SCORE')
-
-    print('Creating regression visualization...')
-    pairwise_comp_viz(rd_mu, target='RMSE')
     
     print('Classification per model means...\n', c_mu)
     print('Classification per model standard deviation...\n', c_std)
-
     print('Regression per model means...\n', r_mu)
     print('Regression per model standard deviation...\n', r_std)
+
+    print('Creating classification visualization...')
+    pairwise_comp_viz(cd_mu, target='F1_SCORE')
+    print('Creating regression visualization...')
+    pairwise_comp_viz(rd_mu, target='RMSE')
 
 
 if __name__ == '__main__':
