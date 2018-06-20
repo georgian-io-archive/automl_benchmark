@@ -2,10 +2,12 @@
 
 from pprint import PrettyPrinter
 import itertools
+import os
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+plt.style.use(['fivethirtyeight'])
 import matplotlib as mpl
 from colour import Color, color_scale, hsl2hex
 
@@ -53,13 +55,13 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
         An augmented pandas dataframe with removed datasets
     """
 
-    # pp.pprint('Total Missing data points: ', len(missing_df))
+    pp.pprint('Total Missing data points: ', len(missing_df))
     counts = missing_df.groupby(['TYPE', 'MODEL'])['DATASET_ID'].value_counts()
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
     drop_dids = np.unique(drop_datasets).tolist()
-    # pp.pprint('Datasets to be dropped...')
-    # pp.pprint(counts, '\n\n')
+    pp.pprint('Datasets to be dropped...')
+    pp.pprint(counts, '\n\n')
 
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
     missing_df = missing_df[~missing_df['DATASET_ID'].isin(drop_dids)]
@@ -74,9 +76,9 @@ def drop_missing_runs(runs_df, missing_df):
     Returns:
         A index list 
     """
-    # pp.pprint('Dropped dataset seed combinations...')
+    pp.pprint('Dropped dataset seed combinations...')
     drop_tuples = missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()
-    # pp.pprint(drop_tuples)
+    pp.pprint(drop_tuples)
     runs_df = runs_df.set_index(['DATASET_ID', 'SEED'])
     runs_df = runs_df.drop(index=drop_tuples).reset_index()
     runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'RMSE', 'R2_SCORE', 'LOGLOSS', 
@@ -103,6 +105,7 @@ def data_distributions(data_df, target):
     plt.legend(loc='upper right')
     plt.show()
 
+
 def pairwise_comp_viz(mu_df, target):
     """Creates a pariwise interaction visualization plot comparing each model against the other
     Args:
@@ -111,72 +114,94 @@ def pairwise_comp_viz(mu_df, target):
         c_df_info (pd.Dataframe): A dataframe with information about each dataset type
     """
 
-    plt.style.use(['fivethirtyeight']) # customize your plots style
     def square_fac(n):
         upper_bound = int(n**0.5)+1
         for c in range(upper_bound, 0, -1):
-            if c % n == 0: break
+            if n % c == 0: break
         rslts = [c, int(n/c)]
         return min(rslts), max(rslts)
-    def plot_comp(mu_df, m1, m2, cmap, metric_name, ax):
+
+    def plot_comp(mu_df, m1, m2, vmin, vmax, cmap, ax):
         m1_values = mu_df.xs(m1, level=1).values
         m2_values = mu_df.xs(m2, level=1).values
 
         # difference from y=x color mapping (not magnitude because independent)
         colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
 
-        sc = ax.scatter(m1_values, m2_values, s=15, c=colors, cmap='bwr', zorder=10, 
-            norm=MidpointNormalize(midpoint=0))
+        sc = ax.scatter(m1_values, m2_values, alpha=0.7, s=15, c=colors, cmap=cmap, zorder=10, 
+            norm=MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0))
         ax.set_xlabel(m1)
         ax.set_ylabel(m2)
         ax.axhline(c='black', lw=1, alpha=0.5)
         ax.axvline(c='black', lw=1, alpha=0.5)
 
-        ax.set_title('Mean Dataset {}'.format(metric_name, m2, m1))
         lims = [np.min([ax.get_xlim(), ax.get_ylim()]),
                 np.max([ax.get_xlim(), ax.get_ylim()])]
         ax.plot(lims, lims, 'k-', lw=2, alpha=0.2, zorder=0)
         ax.set_aspect('equal')
         ax.set_xlim(lims)
         ax.set_ylim(lims)
-
         return sc
 
     class MidpointNormalize(mpl.colors.Normalize):
-        """
-        class to help renormalize the color scale
-        """
         def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
             self.midpoint = midpoint
-            gamma = 0.1
-            mpl.colors.PowerNorm.__init__(self, gamma, vmin, vmax, clip)
+            mpl.colors.Normalize.__init__(self, vmin, vmax, clip)
 
         def __call__(self, value, clip=None):
             x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
             return np.ma.masked_array(np.interp(value, x, y))
 
-    mu_df = mu_df[target]
+    def get_color_range(c1, c2, bins):
+        MAX_L = 0.7
+        c1h, c1s, c1l = c1.hsl
+        c2h, c2s, c2l = c2.hsl
+        c1_bins = [Color(hsl=(c1h, c1s, var_l)) for var_l in np.linspace(c1l, MAX_L, int(bins/2))]
+        c2_bins = [Color(hsl=(c2h, c2s, var_l)) for var_l in np.linspace(MAX_L, c2l, int(bins/2))]
+        color_range = [c.hex_l for c in (c1_bins + c2_bins)]
+        return color_range
 
+    mu_df = mu_df[target]
     models = np.unique(mu_df.index.get_level_values('MODEL').values)
     combos = list(itertools.combinations(models, 2))
     plot_count = len(combos)
     rows, cols = square_fac(plot_count)
     fig, ax_list = plt.subplots(rows, cols)
-    mname = target.replace('_', ' ').title()
-    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.6), (0.8, 0.7, 0.6), plot_count)]
+    fig.set_size_inches(18, 10)
+    metric_name = target.replace('_', ' ').title()
+    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), plot_count)]
     model_colors = {m: c for m, c in zip(models, base_colors)}
-    color_len = 100
+    color_bins = 10
     scatters = []
-    for combo, ax in zip(combos, ax_list):
-        m1, m2 = combo
-        m2_colors = [c.hex_l for c in Color('black').range_to(Color(model_colors[m1]), color_len)]
-        m1_colors = [c.hex_l for c in Color(model_colors[m1]).range_to(Color('black'), color_len)]
-        cmap = mpl.colors.ListedColormap(m1_colors[:-1]+m2_colors)
 
-        scatters.append(plot_comp(mu_df, m1, m2, cmap=cmap, metric_name=mname, ax=ax))
-    for sc, ax in zip(scatters, ax_list):
-        plt.colorbar(sc, ax=ax)
-    plt.show()
+    # get min-max of differences
+    vmin = np.inf
+    vmax = -np.inf
+    for m1, m2 in combos:
+        m1_values = mu_df.xs(m1, level=1).values
+        m2_values = mu_df.xs(m2, level=1).values
+        colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
+        if np.max(colors) > vmax:
+            vmax = np.max(colors)
+        if np.min(colors) < vmin:
+            vmin = np.min(colors)
+
+    for combo, ax in zip(combos, ax_list.ravel()):
+        m1, m2 = combo
+        color_range = get_color_range(Color(model_colors[m1]), Color(model_colors[m2]), color_bins)
+        cmap = mpl.colors.ListedColormap(color_range)
+        scatters.append(plot_comp(mu_df, m1, m2, vmin, vmax, cmap, ax))
+
+    for sc, ax in zip(scatters, ax_list.ravel()):
+        cbar = fig.colorbar(sc, ax=ax) # fraction=0.046, pad=0.04,
+        cbar.ax.tick_params(labelsize=10)
+        cbar.set_label('Normalized {} Difference'.format(metric_name), rotation=90, fontsize=8,
+            labelpad=-55)
+
+    fig.suptitle('Dataset Mean {} Across Frameworks'.format(metric_name))
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
+    plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=1000)
 
 
 def per_model_mean_std(runs_df):
@@ -210,10 +235,10 @@ def analysis_suite():
 
     runs_df = pd.read_csv('./compiled_results.csv')
 
-    runs_df = runs_df[runs_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
+    # runs_df = runs_df[runs_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
 
     missing_df = compute_missing_runs(runs_df)
-    missing_df = missing_df[missing_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
+    # missing_df = missing_df[missing_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
 
     runs_df, missing_df = drop_missing_datasets(runs_df, missing_df, 10)
     runs_df = drop_missing_runs(runs_df, missing_df)
