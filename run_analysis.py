@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-from pprint import PrettyPrinter
 import itertools
 import os
 
@@ -14,8 +13,6 @@ from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
 
 from benchmark import generate_tests
-
-pp = PrettyPrinter(indent=4)
 
 
 def set_print_options(rows=None, cols=None):
@@ -58,13 +55,10 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
         An augmented pandas dataframe with removed datasets
     """
 
-    print('Total Missing data points: {}'.format(len(missing_df)))
     counts = missing_df.groupby(['TYPE', 'MODEL'])['DATASET_ID'].value_counts()
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
     drop_dids = np.unique(drop_datasets).tolist()
-    print('Datasets to be dropped...')
-    pp.pprint(counts)
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
 
     return runs_df
@@ -77,14 +71,10 @@ def drop_missing_runs(runs_df, missing_df):
     Returns:
         A index list 
     """
-    pp.pprint('Dropped dataset seed combinations...')
     drop_tuples = list(set(missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()))
     dataset_missing = pd.DataFrame(drop_tuples, columns=['DATASET_ID', 'SEED'])['DATASET_ID'].value_counts()
     drop_dids = dataset_missing[dataset_missing > 5].index.values.tolist()
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
-    pp.pprint(drop_tuples)
-    print('Dropped data entire data set (>5 missing after intersection)...')
-    print(drop_dids)
     runs_df = runs_df.set_index(['DATASET_ID', 'SEED'])
     runs_df = runs_df.drop(index=drop_tuples).reset_index()
     runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'RMSE', 'R2_SCORE', 'LOGLOSS', 
@@ -260,6 +250,20 @@ def analysis_suite():
     rd_mu, rd_std = per_dataset_mean_std(r_df)
     c_mu, c_std = per_model_mean_std(c_df)
     r_mu, r_std = per_model_mean_std(r_df)
+
+    deduplicated_missing = list(set([tuple(v) for v in missing_df[['DATASET_ID', 
+                                                                   'SEED']].values]))
+    deduplicated_df = pd.DataFrame(deduplicated_missing, columns=['DATASET_ID', 'COUNT'])
+    drop_counts = deduplicated_df['DATASET_ID'].value_counts()
+    dropped_dataset_count = len(drop_counts[drop_counts > 5])
+    dropped_points = drop_counts[drop_counts <= 5].sum()
+    total_dropped_points = dropped_dataset_count*10+dropped_points*4
+    print('Dropped items per datasets (>5 drop entire dataset)...')
+    print(drop_counts)
+    print('Total dropped datasets: ', dropped_dataset_count)
+    print('Other dropped points: ', dropped_points)
+    print('percentage {}/5200: {}'.format(total_dropped_points, 
+                                        total_dropped_points/5200))
     
     print('Classification per model means...\n', c_mu)
     print('Classification per model standard deviation...\n', c_std)
