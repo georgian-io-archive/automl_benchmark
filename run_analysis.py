@@ -103,6 +103,73 @@ def data_distributions(data_df, target):
     plt.legend(loc='upper right')
     plt.show()
 
+def correlation_viz(mu_df, targets):
+    """Creates scatterplots of correlation betwene dataset stats and model performance 
+    Args:
+        mu_df (pd.DataFrame): A dataframe holding all failures
+        targets (dict(str,list(str))): Column names from mu_df to perform analysis on
+    """
+
+    def get_true_features(d_id):
+        df = pd.read_csv('datasets/{}.csv'.format(d_id))
+        df_types = pd.read_csv('datasets/{}_types.csv'.format(d_id))
+
+        #Get categorical encoded column count
+        df_types_cat = df_types.loc[df_types['TYPE'] == 'categorical']['NAME']
+        df_cat = df[df.columns.intersection(df_types_cat.values)]
+        uniques = [len(df_cat[col].unique()) for col in df_cat]
+
+        df_types_num = df_types.loc[df_types['TYPE'] == 'numerical']['NAME']
+        df_num = df[df.columns.intersection(df_types_num.values)]
+        
+        count = np.sum(uniques) + len(df_num.columns)
+
+        return count
+ 
+    plt.gcf().set_size_inches(20, 15)
+    plt.gcf().suptitle('Dataset Dependent Performance Analysis')   
+
+    meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
+    meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
+    meta_df = pd.concat([meta_c_df, meta_r_df])
+    
+    #meta_df['INPUT_SIZE'] = meta_df.apply(lambda row: print(row))
+    meta_df['DIMENSIONALITY'] = meta_df.apply(lambda row: get_true_features(row['DATASET_ID']), axis=1)
+
+    full_data = pd.merge(mu_df, meta_df, how='left')    
+    models = full_data['MODEL'].unique()
+
+    row_size = max([len(x) for x in targets.values()])
+    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), len(models))]
+
+    for j, TYPE in enumerate(targets):
+        for i, BASE in enumerate(targets[TYPE][1]): 
+     
+            all_data = full_data.loc[full_data['TYPE'] == TYPE]
+            all_data = all_data[['MODEL','DATASET_ID',BASE,targets[TYPE][0]]]
+            all_data = all_data.groupby(['MODEL','DATASET_ID',BASE], as_index=False).mean()
+            all_data = all_data.sort_values(BASE)
+
+            plt.subplot(len(targets),row_size,row_size*j+i+1)
+
+            plt.xlabel(BASE.replace('_',' ').capitalize())
+            plt.ylabel("{} {}".format(TYPE.replace('_',' ').capitalize(), 
+                                      targets[TYPE][0].replace('_',' ').capitalize()))
+            for k, m in enumerate(models):
+                ss = all_data.loc[all_data['MODEL'] == m]
+                ss[BASE] = ss[BASE].rolling(int(len(ss[BASE])/2)).median()
+                ss[targets[TYPE][0]] = ss[targets[TYPE][0]].rolling(int(len(ss[BASE])/2)).median()
+
+                x = ss[BASE]
+                y = ss[targets[TYPE][0]]
+                plt.plot(np.log(x),y,color = base_colors[k], alpha = 0.7)
+
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
+    #plt.savefig('figures/DatasetPerformance.png', dpi=1000)
+
+    plt.show()
+    
 
 def dataset_viz(mu_df, targets):
     """Creates histograms for given dataset, type filter and targets
@@ -321,8 +388,11 @@ def analysis_suite():
     #pairwise_comp_viz(rd_mu, target='RMSE')
 
     print('Creating dataset visualization...')
-    dataset_viz(runs_df, targets={'classification':['FEATURES','ROWS','CLASSES'],
-                                  'regression':['FEATURES','ROWS']}) 
+    #dataset_viz(runs_df, targets={'classification':['FEATURES','ROWS','CLASSES'],
+    #                              'regression':['FEATURES','ROWS']}) 
+    print('Creating metric correlation visualization...')
+    correlation_viz(runs_df, targets={'classification':('F1_SCORE',['DIMENSIONALITY','ROWS']),
+                                       'regression':('RMSE',['DIMENSIONALITY','ROWS'])})
 
 if __name__ == '__main__':
     set_print_options()
