@@ -104,36 +104,47 @@ def data_distributions(data_df, target):
     plt.show()
 
 
-def dataset_viz(mu_df, dtype, targets):
+def dataset_viz(mu_df, targets):
     """Creates histograms for given dataset, type filter and targets
     Args:
         mu_df (pd.DataFrame): A dataframe holding all failures
-        dtype (str): Key from 'TYPE' to extract from mu_df for analysis
-        targets (list(str)): Column names from mu_df to perform analysis on
+        targets (dict(str,list(str))): Column names from mu_df to perform analysis on
     """
-   
+
+    plt.gcf().set_size_inches(20, 15)
+    plt.gcf().suptitle('Content Analysis of Datasets')   
+
     meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
     meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
     meta_df = pd.concat([meta_c_df, meta_r_df])
 
-    for i, BASE in targets: 
- 
-        all_data = pd.merge(mu_df.loc[mu_df['TYPE']==dtype], meta_df, how='left')   
+    row_size = max([len(x) for x in targets.values()])
+    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), row_size)]
 
-        plt.subplot(1,len(targets),i+1)
-        plt.title("Regression Datasets")
+    for j, TYPE in enumerate(targets):
+        for i, BASE in enumerate(targets[TYPE]): 
+     
+            all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')   
+            full_data = pd.merge(mu_df, meta_df, how='left')
 
-        plt.xlabel("Number of Features (Log Scale)")
-        plt.ylabel("Frequency")
-        counts, bins, bars = plt.hist(all_data[BASE], 
-                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
-                                                   np.log10(np.max(all_data[BASE])), 30), 
-                                  stacked=True)
-        plt.gca().set_xscale('log')
+            plt.subplot(len(targets),row_size,row_size*j+i+1)
+
+            plt.xlabel(BASE.capitalize() + " Count (Log Scale)")
+            plt.ylabel("{} Frequency".format(BASE.capitalize()))
+            counts, bins, bars = plt.hist(all_data[BASE], 
+                                      bins=np.logspace(np.log10(np.min(full_data[BASE])), 
+                                                       np.log10(np.max(full_data[BASE])), 30), 
+                                      stacked=True, color = base_colors[i])
+            plt.gca().set_xscale('log')
 
 
-    plt.show()
 
+
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
+    plt.savefig('figures/DatasetShapes.png', dpi=1000)
+
+    #plt.show()
 
 def pairwise_comp_viz(mu_df, target):
     """Creates a pariwise interaction visualization plot comparing each model against the other
@@ -308,10 +319,10 @@ def analysis_suite():
     print('Creating regression visualization...')
     pairwise_comp_viz(rd_mu, target='RMSE')
     
-    print('Creating classification dataset visualization...')
-    dataset_viz(runs_df, dtype='classification', targets=['FEATURES','ROWS','CLASSES']) 
-    print('Creating classification dataset visualization...')
-    dataset_viz(runs_df, dtype='regression',  targets=['FEATURES','ROWS'])
+    print('Creating dataset visualization...')
+    dataset_viz(runs_df, targets={'classification':['FEATURES','ROWS','CLASSES'],
+                                  'regression':['FEATURES','ROWS']})
+
 
 if __name__ == '__main__':
     set_print_options()
