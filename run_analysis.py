@@ -5,7 +5,10 @@ import itertools
 
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
+plt.style.use('fivethirtyeight')
+
 import matplotlib as mpl
 from colour import Color, color_scale, hsl2hex
 
@@ -103,6 +106,94 @@ def data_distributions(data_df, target):
     plt.legend(loc='upper right')
     plt.show()
 
+
+def missing_data_viz(mu_df):
+    """Creates scatter plots comparing the relative failure rate of models on classification and regression problems
+    Args:
+        fail_df (pd.DataFrame): A dataframe holding all failures
+    """
+    
+    meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
+    meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
+    meta_df = pd.concat([meta_c_df, meta_r_df])
+
+    TYPE = "regression"
+    all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')   
+
+    plt.subplot(2,3,1)
+    plt.title("Regression Datasets")
+
+    BASE = "FEATURES"
+    plt.xlabel("Number of Features (Log Scale)")
+    plt.ylabel("Frequency")
+    counts, bins, bars = plt.hist(all_data[BASE], 
+                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
+                                                   np.log10(np.max(all_data[BASE])), 30), 
+                                  stacked=True)
+    plt.gca().set_xscale('log')
+
+    BASE = "ROWS"
+    plt.subplot(2,3,2)
+    plt.xlabel("Number of Rows (Log Scale)")
+    plt.ylabel("Frequency")
+    counts, bins, bars = plt.hist(all_data[BASE], 
+                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
+                                                   np.log10(np.max(all_data[BASE])), 30), 
+                                  stacked=True)
+    plt.gca().set_xscale('log')
+
+
+    TYPE = "classification"
+    all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')   
+
+    plt.subplot(2,3,4)
+    plt.title("Classification Datasets")
+
+    BASE = "FEATURES"
+    plt.xlabel("Number of Features (Log Scale)")
+    plt.ylabel("Frequency")
+    counts, bins, bars = plt.hist(all_data[BASE], 
+                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
+                                                   np.log10(np.max(all_data[BASE])), 30), 
+                                  stacked=True)
+    plt.gca().set_xscale('log')
+
+    BASE = "ROWS"
+    plt.subplot(2,3,5)
+    plt.xlabel("Number of Rows (Log Scale)")
+    plt.ylabel("Frequency")
+    counts, bins, bars = plt.hist(all_data[BASE], 
+                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
+                                                   np.log10(np.max(all_data[BASE])), 30), 
+                                  stacked=True)
+    plt.gca().set_xscale('log')
+
+    BASE = "CLASSES"
+    plt.subplot(2,3,6)
+    plt.xlabel("Number of Classes (Log Scale)")
+    plt.ylabel("Frequency")
+    counts, bins, bars = plt.hist(all_data[BASE], 
+                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
+                                                   np.log10(np.max(all_data[BASE])), 30), 
+                                  stacked=True)
+
+    plt.gca().set_xscale('log')
+
+    """
+    ax2 = ax1.twinx()
+    total = np.add(counts[0], counts[1])
+    ratio = np.divide(counts[0], total, out=np.zeros_like(counts[0]), where=total>=1)
+
+    bins = bins[:-1][ratio > 0]
+    ratio = ratio[ratio > 0]
+
+    ax2.scatter(bins, ratio, c='g')    
+    """
+    
+
+    plt.show()
+
+
 def pairwise_comp_viz(mu_df, target):
     """Creates a pariwise interaction visualization plot comparing each model against the other
     Args:
@@ -195,15 +286,15 @@ def analysis_suite():
 
     runs_df = pd.read_csv('./compiled_results.csv')
 
-    runs_df = runs_df[runs_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
+    #runs_df = runs_df[runs_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
 
     missing_df = compute_missing_runs(runs_df)
-    missing_df = missing_df[missing_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
+    #missing_df = missing_df[missing_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
 
-    runs_df, missing_df = drop_missing_datasets(runs_df, missing_df, 10)
-    runs_df = drop_missing_runs(runs_df, missing_df)
+    runs_trim_df, missing_trim_df = drop_missing_datasets(runs_df, missing_df, 10)
+    runs_final_df = drop_missing_runs(runs_df, missing_trim_df)
 
-    c_df, r_df = split_by_type(runs_df)
+    c_df, r_df = split_by_type(runs_final_df)
 
     # data_distributions(c_df, 'F1_SCORE')
     # perform_statistical_analysis(c_df)
@@ -212,7 +303,8 @@ def analysis_suite():
     # print('Classification per dataset means...\n', cd_mu)
     # print('Classification per dataset standard deviation...\n', cd_std)
 
-    pairwise_comp_viz(cd_mu, target='F1_SCORE')
+    #pairwise_comp_viz(cd_mu, target='F1_SCORE')
+    missing_data_viz(runs_final_df) 
 
     rd_mu, rd_std = per_dataset_mean_std(r_df)
     # print('Regression per dataset means...\n', rd_mu)

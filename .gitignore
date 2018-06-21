@@ -114,3 +114,4 @@ ssh/*
 !ssh/baremetal
 !ssh/batch
 *.tar.gz
+*.swp
