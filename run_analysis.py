@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
-plt.style.use(['fivethirtyeight'])
+plt.style.use(['seaborn-notebook'])
 
 import matplotlib as mpl
 from scipy.stats import zscore
@@ -161,12 +161,10 @@ def pairwise_comp_viz(mu_df, target):
             norm=MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0))
         ax.set_xlabel(m1)
         ax.set_ylabel(m2)
-        ax.axhline(c='black', lw=1, alpha=0.5)
-        ax.axvline(c='black', lw=1, alpha=0.5)
 
         lims = [np.min([ax.get_xlim(), ax.get_ylim()]),
                 np.max([ax.get_xlim(), ax.get_ylim()])]
-        ax.plot(lims, lims, 'k-', lw=2, alpha=0.2, zorder=0)
+        ax.plot(lims, lims, 'k-', lw=0.7, alpha=0.7, zorder=0)
         ax.set_aspect('equal')
         ax.set_xlim(lims)
         ax.set_ylim(lims)
@@ -196,7 +194,7 @@ def pairwise_comp_viz(mu_df, target):
     plot_count = len(combos)
     rows, cols = square_fac(plot_count)
     fig, ax_list = plt.subplots(rows, cols)
-    fig.set_size_inches(18, 10)
+    fig.set_size_inches(17, 8)
     metric_name = target.replace('_', ' ').title() if target == 'F1_SCORE' else target
     base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), plot_count)]
     model_colors = {m: c for m, c in zip(models, base_colors)}
@@ -222,12 +220,13 @@ def pairwise_comp_viz(mu_df, target):
         scatters.append(plot_comp(mu_df, m1, m2, target, vmin, vmax, cmap, ax))
 
     for sc, ax in zip(scatters, ax_list.ravel()):
-        cbar = fig.colorbar(sc, ax=ax) # fraction=0.046, pad=0.04,
+        cbar = fig.colorbar(sc, ax=ax, fraction=0.046, pad=0.08)
         cbar.ax.tick_params(labelsize=10)
         cbar.set_label('Normalized {} Difference'.format(metric_name), rotation=90, fontsize=8,
-            labelpad=-55) # if target == 'F1_SCORE' else -65)
+            labelpad=-57) # if target == 'F1_SCORE' else -65)
 
     fig.suptitle('Dataset Mean {} Across Frameworks'.format(metric_name))
+
     if not os.path.exists('figures'):
         os.makedirs('figures')
     plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=1000)
@@ -291,12 +290,13 @@ def analysis_suite():
     dropped_dataset_count = len(drop_counts[drop_counts > 5])
     dropped_points = drop_counts[drop_counts <= 5].sum()
     total_dropped_points = dropped_dataset_count*10+dropped_points*4
-    print('Dropped items per datasets (>5 drop entire dataset)...')
-    print(drop_counts)
+
+    print('Missing by Model...\n', missing_df['MODEL'].value_counts())
+    print('Dropped items per datasets (>5 drop entire dataset)...\n', drop_counts)
     print('Total dropped datasets: ', dropped_dataset_count)
     print('Other dropped points: ', dropped_points)
     print('percentage {}/5200: {}'.format(total_dropped_points, 
-                                        total_dropped_points/5200))
+                                          total_dropped_points/5200))
     
     print('Classification per model means...\n', c_mu)
     print('Classification per model standard deviation...\n', c_std)
@@ -307,11 +307,11 @@ def analysis_suite():
     pairwise_comp_viz(cd_mu, target='F1_SCORE')
     print('Creating regression visualization...')
     pairwise_comp_viz(rd_mu, target='RMSE')
-
+    
     print('Creating classification dataset visualization...')
     dataset_viz(runs_df, dtype='classification', targets=['FEATURES','ROWS','CLASSES']) 
     print('Creating classification dataset visualization...')
-    dataset_viz(runs_df, dtype='regression',  targets=['FEATURES','ROWS']) 
+    dataset_viz(runs_df, dtype='regression',  targets=['FEATURES','ROWS'])
 
 if __name__ == '__main__':
     set_print_options()
