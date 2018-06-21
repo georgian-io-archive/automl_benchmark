@@ -9,12 +9,8 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
-<<<<<<< HEAD
-plt.style.use('fivethirtyeight')
-
-=======
 plt.style.use(['fivethirtyeight'])
->>>>>>> c799f93d42afaff8caa3c4c349242ec7b7a66bfa
+
 import matplotlib as mpl
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
