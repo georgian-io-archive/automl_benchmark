@@ -6,8 +6,10 @@ import os
 from colour import Color, color_scale, hsl2hex
 import numpy as np
 import pandas as pd
+
 import matplotlib.pyplot as plt
 plt.style.use(['fivethirtyeight'])
+
 import matplotlib as mpl
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
@@ -99,6 +101,37 @@ def data_distributions(data_df, target):
     for k, df in grouped:
         plt.hist(df['F1_SCORE'].values, alpha=0.5, label=k)
     plt.legend(loc='upper right')
+    plt.show()
+
+
+def dataset_viz(mu_df, dtype, targets):
+    """Creates histograms for given dataset, type filter and targets
+    Args:
+        mu_df (pd.DataFrame): A dataframe holding all failures
+        dtype (str): Key from 'TYPE' to extract from mu_df for analysis
+        targets (list(str)): Column names from mu_df to perform analysis on
+    """
+   
+    meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
+    meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
+    meta_df = pd.concat([meta_c_df, meta_r_df])
+
+    for i, BASE in targets: 
+ 
+        all_data = pd.merge(mu_df.loc[mu_df['TYPE']==dtype], meta_df, how='left')   
+
+        plt.subplot(1,len(targets),i+1)
+        plt.title("Regression Datasets")
+
+        plt.xlabel("Number of Features (Log Scale)")
+        plt.ylabel("Frequency")
+        counts, bins, bars = plt.hist(all_data[BASE], 
+                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
+                                                   np.log10(np.max(all_data[BASE])), 30), 
+                                  stacked=True)
+        plt.gca().set_xscale('log')
+
+
     plt.show()
 
 
@@ -275,6 +308,10 @@ def analysis_suite():
     print('Creating regression visualization...')
     pairwise_comp_viz(rd_mu, target='RMSE')
 
+    print('Creating classification dataset visualization...')
+    dataset_viz(runs_df, dtype='classification', targets=['FEATURES','ROWS','CLASSES']) 
+    print('Creating classification dataset visualization...')
+    dataset_viz(runs_df, dtype='regression',  targets=['FEATURES','ROWS']) 
 
 if __name__ == '__main__':
     set_print_options()
