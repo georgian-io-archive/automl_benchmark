@@ -115,3 +115,4 @@ ssh/*
 !ssh/batch
 *.tar.gz
 *.swp
+figures/

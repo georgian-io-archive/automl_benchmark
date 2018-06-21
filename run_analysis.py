@@ -2,19 +2,27 @@
 
 from pprint import PrettyPrinter
 import itertools
+import os
 
+from colour import Color, color_scale, hsl2hex
 import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
+<<<<<<< HEAD
 plt.style.use('fivethirtyeight')
 
+=======
+plt.style.use(['fivethirtyeight'])
+>>>>>>> c799f93d42afaff8caa3c4c349242ec7b7a66bfa
 import matplotlib as mpl
-from colour import Color, color_scale, hsl2hex
+from scipy.stats import zscore
+from sklearn.preprocessing import MinMaxScaler
 
 from benchmark import generate_tests
 
 pp = PrettyPrinter(indent=4)
+
 
 def set_print_options(rows=None, cols=None):
     """Sets the print options for pandas to show all columns or rows"""
@@ -56,18 +64,16 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
         An augmented pandas dataframe with removed datasets
     """
 
-    # pp.pprint('Total Missing data points: ', len(missing_df))
+    print('Total Missing data points: {}'.format(len(missing_df)))
     counts = missing_df.groupby(['TYPE', 'MODEL'])['DATASET_ID'].value_counts()
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
     drop_dids = np.unique(drop_datasets).tolist()
-    # pp.pprint('Datasets to be dropped...')
-    # pp.pprint(counts, '\n\n')
-
+    print('Datasets to be dropped...')
+    pp.pprint(counts)
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
-    missing_df = missing_df[~missing_df['DATASET_ID'].isin(drop_dids)]
 
-    return runs_df, missing_df
+    return runs_df
 
 def drop_missing_runs(runs_df, missing_df):
     """In order to make the comparisons even across models, all runs that did not complete in one
@@ -77,9 +83,14 @@ def drop_missing_runs(runs_df, missing_df):
     Returns:
         A index list 
     """
-    # pp.pprint('Dropped dataset seed combinations...')
-    drop_tuples = missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()
-    # pp.pprint(drop_tuples)
+    pp.pprint('Dropped dataset seed combinations...')
+    drop_tuples = list(set(missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()))
+    dataset_missing = pd.DataFrame(drop_tuples, columns=['DATASET_ID', 'SEED'])['DATASET_ID'].value_counts()
+    drop_dids = dataset_missing[dataset_missing > 5].index.values.tolist()
+    runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
+    pp.pprint(drop_tuples)
+    print('Dropped data entire data set (>5 missing after intersection)...')
+    print(drop_dids)
     runs_df = runs_df.set_index(['DATASET_ID', 'SEED'])
     runs_df = runs_df.drop(index=drop_tuples).reset_index()
     runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'RMSE', 'R2_SCORE', 'LOGLOSS', 
@@ -107,89 +118,33 @@ def data_distributions(data_df, target):
     plt.show()
 
 
-def missing_data_viz(mu_df):
-    """Creates scatter plots comparing the relative failure rate of models on classification and regression problems
+def dataset_viz(mu_df, dtype, targets):
+    """Creates histograms for given dataset, type filter and targets
     Args:
-        fail_df (pd.DataFrame): A dataframe holding all failures
+        mu_df (pd.DataFrame): A dataframe holding all failures
+        dtype (str): Key from 'TYPE' to extract from mu_df for analysis
+        targets (list(str)): Column names from mu_df to perform analysis on
     """
-    
+   
     meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
     meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
     meta_df = pd.concat([meta_c_df, meta_r_df])
 
-    TYPE = "regression"
-    all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')   
+    for i, BASE in targets: 
+ 
+        all_data = pd.merge(mu_df.loc[mu_df['TYPE']==dtype], meta_df, how='left')   
 
-    plt.subplot(2,3,1)
-    plt.title("Regression Datasets")
+        plt.subplot(1,len(targets),i+1)
+        plt.title("Regression Datasets")
 
-    BASE = "FEATURES"
-    plt.xlabel("Number of Features (Log Scale)")
-    plt.ylabel("Frequency")
-    counts, bins, bars = plt.hist(all_data[BASE], 
+        plt.xlabel("Number of Features (Log Scale)")
+        plt.ylabel("Frequency")
+        counts, bins, bars = plt.hist(all_data[BASE], 
                                   bins=np.logspace(np.log10(np.min(all_data[BASE])), 
                                                    np.log10(np.max(all_data[BASE])), 30), 
                                   stacked=True)
-    plt.gca().set_xscale('log')
+        plt.gca().set_xscale('log')
 
-    BASE = "ROWS"
-    plt.subplot(2,3,2)
-    plt.xlabel("Number of Rows (Log Scale)")
-    plt.ylabel("Frequency")
-    counts, bins, bars = plt.hist(all_data[BASE], 
-                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
-                                                   np.log10(np.max(all_data[BASE])), 30), 
-                                  stacked=True)
-    plt.gca().set_xscale('log')
-
-
-    TYPE = "classification"
-    all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')   
-
-    plt.subplot(2,3,4)
-    plt.title("Classification Datasets")
-
-    BASE = "FEATURES"
-    plt.xlabel("Number of Features (Log Scale)")
-    plt.ylabel("Frequency")
-    counts, bins, bars = plt.hist(all_data[BASE], 
-                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
-                                                   np.log10(np.max(all_data[BASE])), 30), 
-                                  stacked=True)
-    plt.gca().set_xscale('log')
-
-    BASE = "ROWS"
-    plt.subplot(2,3,5)
-    plt.xlabel("Number of Rows (Log Scale)")
-    plt.ylabel("Frequency")
-    counts, bins, bars = plt.hist(all_data[BASE], 
-                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
-                                                   np.log10(np.max(all_data[BASE])), 30), 
-                                  stacked=True)
-    plt.gca().set_xscale('log')
-
-    BASE = "CLASSES"
-    plt.subplot(2,3,6)
-    plt.xlabel("Number of Classes (Log Scale)")
-    plt.ylabel("Frequency")
-    counts, bins, bars = plt.hist(all_data[BASE], 
-                                  bins=np.logspace(np.log10(np.min(all_data[BASE])), 
-                                                   np.log10(np.max(all_data[BASE])), 30), 
-                                  stacked=True)
-
-    plt.gca().set_xscale('log')
-
-    """
-    ax2 = ax1.twinx()
-    total = np.add(counts[0], counts[1])
-    ratio = np.divide(counts[0], total, out=np.zeros_like(counts[0]), where=total>=1)
-
-    bins = bins[:-1][ratio > 0]
-    ratio = ratio[ratio > 0]
-
-    ax2.scatter(bins, ratio, c='g')    
-    """
-    
 
     plt.show()
 
@@ -202,58 +157,105 @@ def pairwise_comp_viz(mu_df, target):
         c_df_info (pd.Dataframe): A dataframe with information about each dataset type
     """
 
-    plt.style.use(['fivethirtyeight']) # customize your plots style
     def square_fac(n):
         upper_bound = int(n**0.5)+1
         for c in range(upper_bound, 0, -1):
-            if c % n == 0: break
+            if n % c == 0: break
         rslts = [c, int(n/c)]
         return min(rslts), max(rslts)
-    def plot_comp(mu_df, m1, m2, cmap, metric_name, ax):
+
+    def plot_comp(mu_df, m1, m2, target, vmin, vmax, cmap, ax):
         m1_values = mu_df.xs(m1, level=1).values
         m2_values = mu_df.xs(m2, level=1).values
 
         # difference from y=x color mapping (not magnitude because independent)
         colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
 
-        sc = ax.scatter(m1_values, m2_values, s=15, c=colors, cmap=cmap, zorder=10)
+        sc = ax.scatter(m1_values, m2_values, alpha=0.7, s=15, c=colors, cmap=cmap, zorder=10, 
+            norm=MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0))
         ax.set_xlabel(m1)
         ax.set_ylabel(m2)
         ax.axhline(c='black', lw=1, alpha=0.5)
         ax.axvline(c='black', lw=1, alpha=0.5)
 
-        ax.set_title('Mean Dataset {}'.format(metric_name, m2, m1))
         lims = [np.min([ax.get_xlim(), ax.get_ylim()]),
                 np.max([ax.get_xlim(), ax.get_ylim()])]
         ax.plot(lims, lims, 'k-', lw=2, alpha=0.2, zorder=0)
         ax.set_aspect('equal')
         ax.set_xlim(lims)
         ax.set_ylim(lims)
+        return sc
 
+    class MidpointNormalize(mpl.colors.Normalize):
+        def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
+            self.midpoint = midpoint
+            mpl.colors.Normalize.__init__(self, vmin, vmax, clip)
+
+        def __call__(self, value, clip=None):
+            x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
+            return np.ma.masked_array(np.interp(value, x, y))
+
+    def get_color_range(c1, c2, bins):
+        MAX_L = 0.7
+        c1h, c1s, c1l = c1.hsl
+        c2h, c2s, c2l = c2.hsl
+        c1_bins = [Color(hsl=(c1h, c1s, var_l)) for var_l in np.linspace(c1l, MAX_L, int(bins/2))]
+        c2_bins = [Color(hsl=(c2h, c2s, var_l)) for var_l in np.linspace(MAX_L, c2l, int(bins/2))]
+        color_range = [c.hex_l for c in (c1_bins + c2_bins)]
+        return color_range
 
     mu_df = mu_df[target]
-
     models = np.unique(mu_df.index.get_level_values('MODEL').values)
     combos = list(itertools.combinations(models, 2))
     plot_count = len(combos)
     rows, cols = square_fac(plot_count)
     fig, ax_list = plt.subplots(rows, cols)
-    mname = target.replace('_', ' ').title()
-    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.6), (0.8, 0.7, 0.6), plot_count)]
-    model_colors = {m: c for m in models for c in base_colors}
-    m2_pos_colors = [c.hex for c in Color('white').range_to(Color(base_colors[0]), 5)]
-    color_len = 10
-    for combo, ax in zip(combos, ax_list):
+    fig.set_size_inches(18, 10)
+    metric_name = target.replace('_', ' ').title() if target == 'F1_SCORE' else target
+    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), plot_count)]
+    model_colors = {m: c for m, c in zip(models, base_colors)}
+    color_bins = 10
+    scatters = []
+
+    # get min-max of differences
+    vmin = np.inf
+    vmax = -np.inf
+    for m1, m2 in combos:
+        m1_values = mu_df.xs(m1, level=1).values
+        m2_values = mu_df.xs(m2, level=1).values
+        colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
+        if np.max(colors) > vmax:
+            vmax = np.max(colors)
+        if np.min(colors) < vmin:
+            vmin = np.min(colors)
+
+    for combo, ax in zip(combos, ax_list.ravel()):
         m1, m2 = combo
-        m2_colors = [c.hex_l for c in Color('white').range_to(Color(model_colors[m1]), color_len)]
-        m1_colors = [c.hex_l for c in Color(model_colors[m1]).range_to(Color('white'), color_len)]
-        cmap = mpl.colors.ListedColormap(m1_colors[:-1]+m2_colors)
-        # cmap.set_over(m2_colors[-1])
-        # cmap.set_under(m1_colors[0])
-        plot_comp(mu_df, m1, m2, cmap=cmap, metric_name=mname, ax=ax)
+        color_range = get_color_range(Color(model_colors[m1]), Color(model_colors[m2]), color_bins)
+        cmap = mpl.colors.ListedColormap(color_range)
+        scatters.append(plot_comp(mu_df, m1, m2, target, vmin, vmax, cmap, ax))
 
-    plt.show()
+    for sc, ax in zip(scatters, ax_list.ravel()):
+        cbar = fig.colorbar(sc, ax=ax) # fraction=0.046, pad=0.04,
+        cbar.ax.tick_params(labelsize=10)
+        cbar.set_label('Normalized {} Difference'.format(metric_name), rotation=90, fontsize=8,
+            labelpad=-55) # if target == 'F1_SCORE' else -65)
 
+    fig.suptitle('Dataset Mean {} Across Frameworks'.format(metric_name))
+    if not os.path.exists('figures'):
+        os.makedirs('figures')
+    plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=1000)
+    # plt.show()
+
+
+def standardize_rmse(runs_df):
+    print('Standardizing and scaling RMSE...')
+    regression_dids = np.unique(runs_df[runs_df['TYPE'] == 'regression']['DATASET_ID'].values)
+    for d_id in regression_dids:
+        runs_df.loc[runs_df['DATASET_ID'] == d_id, 'RMSE'] = 1 - MinMaxScaler().fit_transform(zscore(
+            runs_df[runs_df['DATASET_ID'] == d_id]['RMSE'].values).reshape((-1, 1))).ravel()
+
+    return runs_df
 
 def per_model_mean_std(runs_df):
     """Computes the grouped mean and median by model type
@@ -285,39 +287,31 @@ def analysis_suite():
     """An automatic suite that performs analysis on the computed results of the benchmarking process"""
 
     runs_df = pd.read_csv('./compiled_results.csv')
-
-    #runs_df = runs_df[runs_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
-
+    runs_df['R2_SCORE'] = runs_df['R2_SCORE'].abs()
     missing_df = compute_missing_runs(runs_df)
-    #missing_df = missing_df[missing_df['MODEL'] != 'h2o'] # TODO REMOVE THIS
-
-    runs_trim_df, missing_trim_df = drop_missing_datasets(runs_df, missing_df, 10)
-    runs_final_df = drop_missing_runs(runs_df, missing_trim_df)
-
-    c_df, r_df = split_by_type(runs_final_df)
-
-    # data_distributions(c_df, 'F1_SCORE')
-    # perform_statistical_analysis(c_df)
-
+    runs_df = drop_missing_datasets(runs_df, missing_df, 10)
+    runs_df = drop_missing_runs(runs_df, missing_df)
+    runs_df = standardize_rmse(runs_df)
+    c_df, r_df = split_by_type(runs_df)
     cd_mu, cd_std = per_dataset_mean_std(c_df)
-    # print('Classification per dataset means...\n', cd_mu)
-    # print('Classification per dataset standard deviation...\n', cd_std)
-
-    #pairwise_comp_viz(cd_mu, target='F1_SCORE')
-    missing_data_viz(runs_final_df) 
-
     rd_mu, rd_std = per_dataset_mean_std(r_df)
-    # print('Regression per dataset means...\n', rd_mu)
-    # print('Regression per dataset standard deviation...\n', rd_std)
+    c_mu, c_std = per_model_mean_std(c_df)
+    r_mu, r_std = per_model_mean_std(r_df)
+    
+    print('Classification per model means...\n', c_mu)
+    print('Classification per model standard deviation...\n', c_std)
+    print('Regression per model means...\n', r_mu)
+    print('Regression per model standard deviation...\n', r_std)
 
-    # c_mu, c_std = model_mean_std(c_df)
-    # print('Classification means...\n', c_mu)
-    # print('Classification standard deviation...\n', c_std)
+    print('Creating classification visualization...')
+    pairwise_comp_viz(cd_mu, target='F1_SCORE')
+    print('Creating regression visualization...')
+    pairwise_comp_viz(rd_mu, target='RMSE')
 
-    # r_mu, r_std = model_mean_std(r_df)
-    # print('Regression means...\n', r_mu)
-    # print('Regression standard deviation...\n', r_std)
-
+    print('Creating classification dataset visualization...')
+    dataset_viz(runs_df, dtype='classification', targets=['FEATURES','ROWS','CLASSES']) 
+    print('Creating classification dataset visualization...')
+    dataset_viz(runs_df, dtype='regression',  targets=['FEATURES','ROWS']) 
 
 if __name__ == '__main__':
     set_print_options()
