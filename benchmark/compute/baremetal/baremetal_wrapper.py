@@ -4,8 +4,8 @@ import os
 
 import boto3
 
-from benchmark import process
-from get_datasets import single_dataset
+from ...analysis import process
+from ...analysis import single_dataset
 
 def execute():
 

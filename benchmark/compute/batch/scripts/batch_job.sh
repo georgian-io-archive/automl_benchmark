@@ -37,7 +37,7 @@ pip install -r requirements.txt
 aws s3 cp s3://${S3_BUCKET}/${S3_FOLDER}tests.dat ./
 
 #Execute benchmark
-python benchmark_wrapper.py
+python -m benchmark.compute.batch.batch_wrapper
 
 
 exit 0

@@ -46,11 +46,11 @@ def execute():
             print('Failed to set forkserver')
 
     #Download dataset
-    from get_datasets import single_dataset
+    from ...analysis import single_dataset
     single_dataset(dataset, use_cache=True)
 
     #Execute benchmark
-    from benchmark import process
+    from ...analysis import process
     results = process(model, dataset, dtype, seed)
 
     #Upload results to s3

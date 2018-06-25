@@ -1,10 +1,9 @@
-#!/usr/bin/env python
-
 import boto3
-from benchmark import generate_tests
+
 from tqdm import tqdm
 
-from config import load_config
+from ..analysis import generate_tests
+from ..config import load_config
 
 class TempFile:
     """Escrow to hold AWS S3 file object"""
@@ -23,7 +22,7 @@ def delete_file(fid):
     s3_folder = cfg["s3_folder"]
     s3.Bucket(s3_bucket).delete_objects(Delete={'Objects':[{'Key':s3_folder+ "out/results" + str(fid) + ".csv"}]})
 
-def extract():
+def download_data():
     s3 = boto3.resource('s3')
     cfg = load_config()
     s3_bucket = cfg["s3_bucket_root"]
@@ -44,7 +43,3 @@ def extract():
             except Exception as e:
                 pass
                 f.seek(last_pos)
-     
-
-if __name__ == '__main__':
-    extract()

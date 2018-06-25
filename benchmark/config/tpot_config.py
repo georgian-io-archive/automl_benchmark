@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 """This file is part of the TPOT library.
 TPOT was primarily developed at the University of Pennsylvania by:
     - Randal S. Olson (rso@randalolson.com)

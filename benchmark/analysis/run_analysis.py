@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import itertools
 import os
 
@@ -14,7 +12,7 @@ import matplotlib as mpl
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
 
-from benchmark import generate_tests
+from ..analysis import generate_tests
 
 
 def set_print_options(rows=None, cols=None):
@@ -394,7 +392,3 @@ def analysis_suite():
     correlation_viz(runs_df, targets={'classification':('F1_SCORE',['DIMENSIONALITY','ROWS']),
                                        'regression':('RMSE',['DIMENSIONALITY','ROWS'])})
 
-
-if __name__ == '__main__':
-    set_print_options()
-    analysis_suite()

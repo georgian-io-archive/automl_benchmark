@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 
 if __name__ == '__main__':
     # this needs to be here because other libs import mp
@@ -247,6 +246,3 @@ def benchmark():
     for i, m, d_id, t, s in test:
         rslts = process(m, d_id, t, s)
         save_results(*rslts)
-
-if __name__ == '__main__':
-    benchmark() # run benchmarking locally

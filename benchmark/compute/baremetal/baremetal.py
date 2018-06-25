@@ -5,8 +5,8 @@ import subprocess
 import time
 import pickle
 
-from config import load_config
-from dispatcher import Dispatcher, AutoMLMethods
+from ...config import load_config
+from ..dispatcher import Dispatcher, AutoMLMethods
 
 @AutoMLMethods('h2o','auto-sklearn','auto_ml','tpot')
 class BareDispatch(Dispatcher):

@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import argparse
 import os
 
@@ -10,7 +8,7 @@ import scipy
 import pandas as pd
 from tqdm import tqdm
 
-from config import load_config
+from ..config import load_config
 
 def _make_data_dir():
     data_dir = './datasets'
@@ -85,7 +83,7 @@ def _get_from_s3(d_id):
     with open("datasets/" + str(d_id) + "_types.csv", "wb") as f:
         s3.Bucket(s3_bucket).download_fileobj(s3_folder + "datasets/" + str(d_id) + "_types.csv",  f)
 
-def _upload_datasets():
+def upload_datasets():
     """Uploads datasets to S3 cache"""
     config = load_config()
     s3_bucket = config["s3_bucket_root"]
@@ -120,15 +118,4 @@ def single_dataset(d_id, use_cache=False):
     if not use_cache:
         _save_dataset_data(d_id)
     else:
-        _get_from_s3(d_id)
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--upload", help="Upload datasets to S3 cache", action="store_true")
-    args = parser.parse_args()
-
-    #get_studies()
-
-    if args.upload:
-        _upload_datasets()
-    
+        _get_from_s3(d_id) 

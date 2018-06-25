@@ -1,11 +1,9 @@
-#!/usr/bin/env python
-
 import boto3
 import pickle
 import numpy as np
 
-from config import load_config
-from dispatcher import Dispatcher, AutoMLMethods
+from ...config import load_config
+from ..dispatcher import Dispatcher, AutoMLMethods
 
 @AutoMLMethods('none')
 class AWSBatchDispatch(Dispatcher):

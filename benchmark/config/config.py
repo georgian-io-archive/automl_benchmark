@@ -1,12 +1,14 @@
-#!/usr/bin/env python
-
 import json
+import os
 import sys
 
 #Loads configuration to file. Provides direct python access.
 def load_config():
 
-    #Load Config
+    abspath = os.path.abspath(__file__)
+    dname = os.path.dirname(abspath)
+    os.chdir(dname)
+
     with open('batch.config') as f:
         data = json.load(f)
 

@@ -1,22 +1,20 @@
-#!/usr/bin/env python
-
 import boto3
 import pickle
 import numpy as np
 import pandas as pd
 
-from config import load_config
-from benchmark import generate_tests
+from ..config import load_config
+from ..analysis import generate_tests
 
 from dispatcher import execute_methods
 from baremetal import BareDispatch
-from aws_batch import AWSBatchDispatch
+from batch import AWSBatchDispatch
 
 def benchmark(get_tests):
     """Splits data between benchmarking implementations"""
     execute_methods(get_tests)
 
-def partial(nums, models):
+def sample_run(nums, models):
     
     def get_partial():
         fail = get_failures()
@@ -100,5 +98,3 @@ def cleanup():
         i.reload()
         i.terminate()
 
-if __name__ == '__main__':
-    benchmark(generate_tests)
