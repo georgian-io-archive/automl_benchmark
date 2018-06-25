@@ -110,9 +110,9 @@ datasets/
 batch.config
 compiled_results.csv
 tests.dat
-ssh/*
+benchmark/config/ssh/*
 !ssh/baremetal
-!ssh/batch
+!ssh/git
 *.tar.gz
 *.swp
 figures/
