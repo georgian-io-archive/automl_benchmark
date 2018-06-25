@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
-plt.style.use(['seaborn-notebook'])
+plt.style.use(['fivethirtyeight'])
 
 import matplotlib as mpl
 from scipy.stats import zscore
@@ -24,6 +24,16 @@ def set_print_options(rows=None, cols=None):
         pd.set_option('display.max_rows', rows)
     if not cols:
         pd.set_option('display.max_columns', cols)
+
+
+def square_fac(n):
+    """Gets the factors closest to square of a number n"""
+
+    upper_bound = int(n**0.5)+1
+    for c in range(upper_bound, 0, -1):
+        if n % c == 0: break
+    rslts = [c, int(n/c)]
+    return min(rslts), max(rslts)
 
 
 def compute_missing_runs(runs_df):
@@ -125,23 +135,18 @@ def correlation_viz(mu_df, targets):
         count = np.sum(uniques) + len(df_num.columns)
 
         return count
- 
-    plt.gcf().set_size_inches(20, 15)
-    plt.gcf().suptitle('Dataset Dependent Performance Analysis')   
 
+    plt.gcf().set_size_inches(20, 15)  
     meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
     meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
     meta_df = pd.concat([meta_c_df, meta_r_df])
-    
-    #meta_df['INPUT_SIZE'] = meta_df.apply(lambda row: print(row))
     meta_df['DIMENSIONALITY'] = meta_df.apply(lambda row: get_true_features(row['DATASET_ID']), axis=1)
-
     full_data = pd.merge(mu_df, meta_df, how='left')    
     models = full_data['MODEL'].unique()
 
     row_size = max([len(x) for x in targets.values()])
-    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), len(models))]
-
+    base_colors = [hsl2hex(c) for c in color_scale((0., 0.8, 0.6), (0.8, 0.8, 0.6), len(models))]
+    lines = None
     for j, TYPE in enumerate(targets):
         for i, BASE in enumerate(targets[TYPE][1]): 
      
@@ -152,9 +157,14 @@ def correlation_viz(mu_df, targets):
 
             plt.subplot(len(targets),row_size,row_size*j+i+1)
 
+            ylabel_str = targets[TYPE][0]
+            if ylabel_str.lower() == 'rmse':
+                label_str = 'standardized negated rmse'
+
             plt.xlabel(BASE.replace('_',' ').capitalize())
             plt.ylabel("{} {}".format(TYPE.replace('_',' ').capitalize(), 
-                                      targets[TYPE][0].replace('_',' ').capitalize()))
+                                      ylabel_str.replace('_',' ').capitalize()))
+            local_lines = []
             for k, m in enumerate(models):
                 ss = all_data.loc[all_data['MODEL'] == m]
                 ss[BASE] = ss[BASE].rolling(int(len(ss[BASE])/2)).median()
@@ -162,13 +172,18 @@ def correlation_viz(mu_df, targets):
 
                 x = ss[BASE]
                 y = ss[targets[TYPE][0]]
-                plt.plot(np.log(x),y,color = base_colors[k], alpha = 0.7)
+                line, = plt.plot(x, y, color=base_colors[k], alpha=0.7, label=m)
+                local_lines.append(line)
+            if lines == None:
+                lines = local_lines
+    
+    plt.figlegend(lines, models, fancybox=True, framealpha=0.0)
+    plt.gcf().suptitle('Dataset Dependent Performance Analysis') 
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
-    #plt.savefig('figures/DatasetPerformance.png', dpi=1000)
-
-    plt.show()
+    plt.savefig('figures/DatasetPerformance.png', dpi=plt.gcf().dpi, transparent=True)
+    # plt.show()
     
 
 def dataset_viz(mu_df, targets):
@@ -178,40 +193,51 @@ def dataset_viz(mu_df, targets):
         targets (dict(str,list(str))): Column names from mu_df to perform analysis on
     """
 
-    plt.gcf().set_size_inches(20, 15)
-    plt.gcf().suptitle('Content Analysis of Datasets')   
+    def lengths(x):
+        if isinstance(x,list):
+            yield len(x)
+            for y in x:
+                yield from lengths(y)
+
+    rows = len(targets.keys())
+    cols = max(lengths(list(targets.values())))
+    fig, axes_list = plt.subplots(rows, cols)
+    axes_list[-1, -1].axis('off')
+    fig.set_size_inches(18, 8)
 
     meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
     meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
     meta_df = pd.concat([meta_c_df, meta_r_df])
 
     row_size = max([len(x) for x in targets.values()])
-    base_colors = [hsl2hex(c) for c in color_scale((0, 0.7, 0.4), (1, 0.7, 0.4), row_size)]
+    base_colors = [hsl2hex(c) for c in color_scale((0., 0.8, 0.6), (0.8, 0.8, 0.6), row_size)]
 
     for j, TYPE in enumerate(targets):
-        for i, BASE in enumerate(targets[TYPE]): 
-     
+        for i, BASE in enumerate(targets[TYPE]):             
             all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')   
             full_data = pd.merge(mu_df, meta_df, how='left')
 
-            plt.subplot(len(targets),row_size,row_size*j+i+1)
+            ax = axes_list[j][i]
+            ax.set_xlabel(BASE.capitalize() + " Count (Log Scale)")
+            ax.set_ylabel("{} Frequency".format(BASE.capitalize()))
+            counts, bins, bars = ax.hist(all_data[BASE], 
+                                         bins=np.logspace(np.log10(np.min(full_data[BASE])), 
+                                                          np.log10(np.max(full_data[BASE])), 
+                                                          30), 
+                                         stacked=True, 
+                                         color=base_colors[i],
+                                         alpha=0.7,
+                                         edgecolor='black',
+                                         linewidth=0.6)
+            ax.set_xscale('log')
 
-            plt.xlabel(BASE.capitalize() + " Count (Log Scale)")
-            plt.ylabel("{} Frequency".format(BASE.capitalize()))
-            counts, bins, bars = plt.hist(all_data[BASE], 
-                                      bins=np.logspace(np.log10(np.min(full_data[BASE])), 
-                                                       np.log10(np.max(full_data[BASE])), 30), 
-                                      stacked=True, color = base_colors[i])
-            plt.gca().set_xscale('log')
-
-
-
+    fig.suptitle('Content Analysis of Datasets')
+    fig.subplots_adjust(hspace=0.4, wspace=0.3)
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
-    plt.savefig('figures/DatasetShapes.png', dpi=1000)
-
-    #plt.show()
+    plt.savefig('figures/DatasetShapes.png', dpi=fig.dpi, transparent=True)
+    # plt.show()
 
 def pairwise_comp_viz(mu_df, target):
     """Creates a pariwise interaction visualization plot comparing each model against the other
@@ -220,13 +246,6 @@ def pairwise_comp_viz(mu_df, target):
                               means across runs
         c_df_info (pd.Dataframe): A dataframe with information about each dataset type
     """
-
-    def square_fac(n):
-        upper_bound = int(n**0.5)+1
-        for c in range(upper_bound, 0, -1):
-            if n % c == 0: break
-        rslts = [c, int(n/c)]
-        return min(rslts), max(rslts)
 
     def plot_comp(mu_df, m1, m2, target, vmin, vmax, cmap, ax):
         m1_values = mu_df.xs(m1, level=1).values
@@ -307,7 +326,8 @@ def pairwise_comp_viz(mu_df, target):
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
-    plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=1000)
+    plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=fig.dpi, 
+                                                                                  transparent=True)
     # plt.show()
 
 
