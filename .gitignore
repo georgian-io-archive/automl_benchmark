@@ -107,7 +107,7 @@ venv.bak/
 .DS_Store
 automl_benchmark/
 datasets/
-batch.config
+*.config
 compiled_results.csv
 tests.dat
 benchmark/config/ssh/*

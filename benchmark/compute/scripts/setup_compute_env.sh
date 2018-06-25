@@ -20,5 +20,3 @@ eval "$(aws ecr get-login --no-include-email)"
 docker tag auto-ml-exploration:latest $(python config.py ecr_repo)
 docker push $(python config.py ecr_repo)
 
-#Execute main python script
-#python batch.py

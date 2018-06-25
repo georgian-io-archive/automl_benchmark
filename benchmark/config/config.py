@@ -5,12 +5,13 @@ import sys
 #Loads configuration to file. Provides direct python access.
 def load_config():
 
-    abspath = os.path.abspath(__file__)
-    dname = os.path.dirname(abspath)
-    os.chdir(dname)
+   data = None 
 
-    with open('batch.config') as f:
-        data = json.load(f)
+    try:
+        with open('batch.config') as f:
+            data = json.load(f)
+    except:
+        print("Failed to load configuration. Please ensure working directory is root of repository.")
 
     return data
 
