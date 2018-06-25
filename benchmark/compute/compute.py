@@ -101,19 +101,19 @@ def cleanup():
 def clean_s3():
 
     #Clean S3
-    p = subprocess.call('benchmark/compute/scripts/clean_env.sh', shell=True)
+    p = subprocess.Popen('benchmark/compute/scripts/clean_env.sh', shell=True)
     p.wait()
 
 def update_environment():
 
     #Update environment
-    p = subprocess.call('benchmark/compute/scripts/setup_compute_env.sh', shell=True)
+    p = subprocess.Popen('benchmark/compute/scripts/setup_compute_env.sh', shell=True)
     p.wait()
 
 def get_logs():
 
     #Get logs
-    p = subprocess.call('benchmark/compute/scripts/fetch_logs.sh', shell=True)
+    p = subprocess.Popen('benchmark/compute/scripts/fetch_logs.sh', shell=True)
     p.wait()
 
 def run_full():
