@@ -1,0 +1,6 @@
+#SSH Information to Access Baremetal EC2 Instances
+
+HOST *
+ StrictHostKeyChecking no
+ User ec2-user
+ IdentityFile ~/.ssh/aws

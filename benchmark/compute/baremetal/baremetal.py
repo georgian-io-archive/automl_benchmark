@@ -65,7 +65,7 @@ class BareDispatch(Dispatcher):
         config = load_config()
         s3_bucket = config["s3_bucket_root"]
         s3_folder = config["s3_folder"]
-        cluster_size = config["cluster_size"]
+        cluster_size = min(config["cluster_size"], len(tests))
         template_id = config["ec2_template"]
         cluster_type = config["cluster_type"]
 
