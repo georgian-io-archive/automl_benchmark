@@ -19,7 +19,7 @@ make install
 cd ~
 
 #Clone down repository
-export GIT_SSH_COMMAND="ssh -F /root/.ssh/batch -o StrictHostKeyChecking=no"
+export GIT_SSH_COMMAND="ssh -F /root/.ssh/git -o StrictHostKeyChecking=no"
 git clone repo:georgianpartners/automl_benchmark automl_benchmark
 cd  automl_benchmark
 
