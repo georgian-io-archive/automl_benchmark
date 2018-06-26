@@ -1,9 +1,11 @@
-from get_datasets import get_studies
-from get_datasets import upload_datasets
 
-from run_analysis import analysis_suite
+from .get_datasets import get_studies
+from .get_datasets import upload_datasets
 
-from fetch_results import download_data
+from .run_analysis import analysis_suite
 
-from benchmark import process
-from benchmark import generate_tests
+from .fetch_results import download_data
+from .fetch_results import delete_file
+
+from .benchmark import process
+from .benchmark import generate_tests

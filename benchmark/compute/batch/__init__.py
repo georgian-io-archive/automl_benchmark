@@ -1,1 +1,1 @@
-from batch import AWSBatchDispatch
+from .batch import AWSBatchDispatch

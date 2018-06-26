@@ -1,14 +1,18 @@
 import boto3
 import pickle
+import subprocess
 import numpy as np
 import pandas as pd
 
+from tqdm import tqdm
+
 from ..config import load_config
 from ..analysis import generate_tests
+from ..analysis import delete_file
 
-from dispatcher import execute_methods
-from baremetal import BareDispatch
-from batch import AWSBatchDispatch
+from .dispatcher import execute_methods
+from .baremetal import BareDispatch
+from .batch import AWSBatchDispatch
 
 def benchmark(get_tests):
     """Splits data between benchmarking implementations"""
@@ -29,6 +33,12 @@ def resume():
     """Resumes process and restarts failed tasks"""
     benchmark(get_failures)
     
+def execute_list(ls):
+    """Executes benchmarking on specific list
+    """
+    def generate_list():
+        return ls
+    benchmark(generate_list)
 
 def get_failures():
     """Retrieve Failures from S3"""
@@ -88,6 +98,26 @@ def reruns_wrapper():
     missing_df = pd.DataFrame(get_failures(), columns=['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED'])
     return generate_smart_reruns(missing_df)
 
+def run_file(fname):
+
+    def get_runs():
+        with open(fname, 'rb') as f:
+            x = pickle.load(f)
+
+    benchmark(get_runs)
+
+def delete_runs(fname):
+
+    x = pickle.load(open(fname, 'rb'))
+    ids = [x[0] for v in x]
+    
+    for idx in tqdm(ids):
+          delete_file(idx)
+
+def export_failures(fname):
+
+    g = get_failures()
+    pickle.dump(g, open(fname, 'wb'))
 
 def cleanup():
 

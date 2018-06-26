@@ -7,13 +7,13 @@ def load_config():
 
    data = None 
 
-    try:
-        with open('batch.config') as f:
-            data = json.load(f)
-    except:
-        print("Failed to load configuration. Please ensure working directory is root of repository.")
+   try:
+       with open('batch.config') as f:
+           data = json.load(f)
+   except:
+       print("Failed to load configuration. Please ensure working directory is root of repository.")
 
-    return data
+   return data
 
 
 #This function is used to provide configuration to shell scripts
@@ -26,7 +26,3 @@ def print_config():
         print(data[sys.argv[1]])
     else:
         print("None")
-
-
-if __name__ == '__main__':
-    print_config()

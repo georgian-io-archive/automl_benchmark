@@ -1,1 +1,1 @@
-from baremetal import BareDispatch
+from .baremetal import BareDispatch

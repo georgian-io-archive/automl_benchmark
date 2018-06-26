@@ -12,7 +12,7 @@ import matplotlib as mpl
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
 
-from ..analysis import generate_tests
+from .benchmark import generate_tests
 
 
 def set_print_options(rows=None, cols=None):
@@ -69,6 +69,9 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
     drop_dids = np.unique(drop_datasets).tolist()
+    #Drop datasets used in auto-sklearn meta-learning
+    drop_dids.extend([3, 6, 12, 14, 16, 18, 21, 22, 23, 24, 28,
+                      31, 32, 36, 38, 44, 46, 60, 182, 300, 554, 1112, 1114, 1120])
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
 
     return runs_df

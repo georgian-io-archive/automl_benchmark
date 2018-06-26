@@ -1,3 +1,2 @@
-import analysis
-import compute
-import config
+from benchmark import analysis
+from benchmark import compute

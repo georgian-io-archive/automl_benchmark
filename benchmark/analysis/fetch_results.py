@@ -2,7 +2,7 @@ import boto3
 
 from tqdm import tqdm
 
-from ..analysis import generate_tests
+from .benchmark import generate_tests
 from ..config import load_config
 
 class TempFile:
