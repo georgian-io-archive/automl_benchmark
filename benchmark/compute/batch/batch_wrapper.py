@@ -51,6 +51,7 @@ def execute():
 
     #Execute benchmark
     from ...analysis import process
+    print(model, dataset, dtype, seed)
     results = process(model, dataset, dtype, seed)
 
     #Upload results to s3
