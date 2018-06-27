@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+#Config matplotlib backend via matplotlibrc
+export MATPLOTLIBRC=/root/automl_benchmark/benchmark/compute/scripts
+
 cd /root/
 cd automl_benchmark
 source automl_benchmark/bin/activate
