@@ -63,7 +63,7 @@ def run_file(fname):
     compute.update_environment()
     compute.execute_list(tasks)
 
-def delete_output():
+def delete_output(fname):
     """Delete specific output from S3 to re-run
     """
     compute.delete_runs(fname)
@@ -94,7 +94,8 @@ if __name__ == '__main__':
                  'get-logs': [download_logs,[],'Download all logs locally'],
                  'clean-s3': [clean_environment,[],'Clean logs and output from S3'],
                  'file-compute': [run_file,[('filename',str)],'Run job defined by task file on AWS'],
-                 'run-analysis': [do_analysis,[],'Execute analysis on locally downloaded results']
+                 'run-analysis': [do_analysis,[],'Execute analysis on locally downloaded results'],
+                 'delete-runs': [delete_output,[('filename',str)],'Delete run output using file']
                }
 
     parser = argparse.ArgumentParser()
