@@ -5,7 +5,7 @@ import numpy as np
 from ...config import load_config
 from ..dispatcher import Dispatcher, AutoMLMethods
 
-@AutoMLMethods('auto_ml')
+@AutoMLMethods('auto_ml','auto-sklearn','tpot')
 class AWSBatchDispatch(Dispatcher):
 
     #Sends the job to amazon batch
