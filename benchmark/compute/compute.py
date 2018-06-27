@@ -1,3 +1,4 @@
+import boto3
 import pickle
 import subprocess
 import numpy as np
@@ -75,8 +76,11 @@ def get_failures():
 
     for p in pages: 
         #Extracts indicies from filenames
-        keys += [ int(k["Key"][7 + prefix_length:-4]) for k in p["Contents"] ]
-    
+        try:
+            keys += [ int(k["Key"][7 + prefix_length:-4]) for k in p["Contents"] ]
+        except:
+            pass
+
     failures =  [ run for run in data if run[0] not in keys ]
 
     return failures

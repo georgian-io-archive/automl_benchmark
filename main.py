@@ -68,7 +68,7 @@ def delete_output(fname):
     """
     compute.delete_runs(fname)
 
-def export_failures():
+def export_failures(fname):
     """Export failures to a pickle file
     """
     compute.export_failures(fname)
@@ -95,7 +95,8 @@ if __name__ == '__main__':
                  'clean-s3': [clean_environment,[],'Clean logs and output from S3'],
                  'file-compute': [run_file,[('filename',str)],'Run job defined by task file on AWS'],
                  'run-analysis': [do_analysis,[],'Execute analysis on locally downloaded results'],
-                 'delete-runs': [delete_output,[('filename',str)],'Delete run output using file']
+                 'delete-runs': [delete_output,[('filename',str)],'Delete run output using file'],
+                 'export-failures': [export_failures,[('filename',str)],'Export failures to file']
                }
 
     parser = argparse.ArgumentParser()
