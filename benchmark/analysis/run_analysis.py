@@ -90,7 +90,7 @@ def drop_missing_runs(runs_df, missing_df):
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
     runs_df = runs_df.set_index(['DATASET_ID', 'SEED'])
     runs_df = runs_df.drop(index=drop_tuples).reset_index()
-    runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'RMSE', 'R2_SCORE', 'LOGLOSS', 
+    runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'MSE', 'R2_SCORE', 'LOGLOSS', 
                        'F1_SCORE']]
 
     return runs_df
@@ -98,7 +98,7 @@ def drop_missing_runs(runs_df, missing_df):
 
 def split_by_type(runs_df):
     runs_grouped = runs_df.groupby('TYPE')
-    return (runs_grouped.get_group('classification').drop(columns=['RMSE', 'R2_SCORE']),
+    return (runs_grouped.get_group('classification').drop(columns=['MSE', 'R2_SCORE']),
             runs_grouped.get_group('regression').drop(columns=['F1_SCORE', 'LOGLOSS']))
 
 def data_distributions(data_df, target):
@@ -159,8 +159,8 @@ def correlation_viz(mu_df, targets):
             plt.subplot(len(targets),row_size,row_size*j+i+1)
 
             ylabel_str = targets[TYPE][0]
-            if ylabel_str.lower() == 'rmse':
-                label_str = 'standardized negated rmse'
+            if ylabel_str.lower() == 'mse':
+                label_str = 'standardized negated mse'
 
             plt.xlabel(BASE.replace('_',' ').capitalize())
             plt.ylabel("{} {}".format(TYPE.replace('_',' ').capitalize(), 
@@ -332,12 +332,12 @@ def pairwise_comp_viz(mu_df, target):
     # plt.show()
 
 
-def standardize_rmse(runs_df):
-    print('Standardizing and scaling RMSE...')
+def standardize_mse(runs_df):
+    print('Standardizing and scaling MSE...')
     regression_dids = np.unique(runs_df[runs_df['TYPE'] == 'regression']['DATASET_ID'].values)
     for d_id in regression_dids:
-        runs_df.loc[runs_df['DATASET_ID'] == d_id, 'RMSE'] = 1 - MinMaxScaler().fit_transform(zscore(
-            runs_df[runs_df['DATASET_ID'] == d_id]['RMSE'].values).reshape((-1, 1))).ravel()
+        runs_df.loc[runs_df['DATASET_ID'] == d_id, 'MSE'] = 1 - MinMaxScaler().fit_transform(zscore(
+            runs_df[runs_df['DATASET_ID'] == d_id]['MSE'].values).reshape((-1, 1))).ravel()
 
     return runs_df
 
@@ -375,7 +375,7 @@ def analysis_suite():
     missing_df = compute_missing_runs(runs_df)
     runs_df = drop_missing_datasets(runs_df, missing_df, 10)
     runs_df = drop_missing_runs(runs_df, missing_df)
-    runs_df = standardize_rmse(runs_df)
+    runs_df = standardize_mse(runs_df)
     c_df, r_df = split_by_type(runs_df)
     cd_mu, cd_std = per_dataset_mean_std(c_df)
     rd_mu, rd_std = per_dataset_mean_std(r_df)
@@ -405,7 +405,7 @@ def analysis_suite():
     print('Creating classification visualization...')
     pairwise_comp_viz(cd_mu, target='F1_SCORE')
     print('Creating regression visualization...')
-    pairwise_comp_viz(rd_mu, target='RMSE')
+    pairwise_comp_viz(rd_mu, target='MSE')
     
     print('Creating dataset visualization...')
     dataset_viz(runs_df, targets={'classification':['FEATURES','ROWS','CLASSES'],
@@ -413,5 +413,5 @@ def analysis_suite():
 
     print('Creating metric correlation visualization...')
     correlation_viz(runs_df, targets={'classification':('F1_SCORE',['DIMENSIONALITY','ROWS']),
-                                       'regression':('RMSE',['DIMENSIONALITY','ROWS'])})
+                                       'regression':('MSE',['DIMENSIONALITY','ROWS'])})
 

@@ -24,10 +24,10 @@ N_CORES = 2
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args):
     """Function that trains and tests data using auto-sklearn"""
 
-    
-
     from autosklearn.classification import AutoSklearnClassifier
     from autosklearn.regression import AutoSklearnRegressor
+    from autosklearn.metrics import f1_weighted
+    from autosklearn.metrics import mean_squared_error
 
     categ_cols = df_types[df_types.NAME != 'target']['TYPE'].values.ravel()
 
@@ -46,7 +46,10 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args
                                       resampling_strategy_arguments={'folds': 5},
                                       delete_tmp_folder_after_terminate=False)
     
-    automl.fit(X_train.copy(), y_train.copy(), feat_type=categ_cols)
+    automl.fit(X_train.copy(),
+        y_train.copy(), 
+        feat_type=categ_cols,
+        metric=f1_weighted if 'classification' else mean_squared_error)
     automl.refit(X_train.copy(), y_train.copy())
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
@@ -80,6 +83,7 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed, *args):
                                population_size=100,
                                verbosity=3,
                                max_time_mins=int(10800/60),
+                               scoring='neg_mean_squared_error',
                                n_jobs=N_CORES,
                                random_state=seed)
 
@@ -143,7 +147,8 @@ def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed, *args):
         'PassiveAggressiveRegressor', 'RandomForestRegressor', 'SGDRegressor', 'XGBRegressor']
     
     automl = Predictor(type_of_estimator='classifier' if m_type == 'classification' else 'regressor',
-                             column_descriptions=df_types)
+                       scoring='f1_score' if m_type == 'classification' else 'mean_squared_error',
+                       column_descriptions=df_types)
 
     automl.train(X_train, model_names=cmodels if m_type == 'classification' else rmodels,
         cv=5, verbose=False)
@@ -194,7 +199,7 @@ def process(m_name, d_id, m_type, seed, *args):
                   'auto_ml': process_auto_ml}
     X_train, X_test, y_train, y_test, df_types = parse_open_ml(d_id, seed)
     y_hat = model_dict.get(m_name, error)(X_train, X_test, y_train, df_types, m_type, seed, *args)
-    rmse, r2_score = (np.nan, np.nan)
+    mse, r2_score = (np.nan, np.nan)
     log_loss, f1_score = (np.nan, np.nan)
     if m_type == 'classification':
         ll_y = (y_test if np.unique(y_test).size == 2 else 
@@ -203,15 +208,15 @@ def process(m_name, d_id, m_type, seed, *args):
         f1_score = metrics.f1_score(y_test, y_hat.argmax(axis=1), average='weighted')
     else:
         r2_score = metrics.r2_score(y_test, y_hat)
-        rmse = np.sqrt(metrics.mean_squared_error(y_test, y_hat))
+        mse = metrics.mean_squared_error(y_test, y_hat)
 
-    return (m_name, d_id, m_type, seed, rmse, r2_score, log_loss, f1_score)
+    return (m_name, d_id, m_type, seed, mse, r2_score, log_loss, f1_score)
 
-def save_results(m_name, d_id, m_type, seed, rmse, r2_score, log_loss, f1_score):
+def save_results(m_name, d_id, m_type, seed, mse, r2_score, log_loss, f1_score):
     """Saves the results to a local file"""
 
     with open('compiled_results.csv', 'a') as fopen:
-        fopen.write('0,{0},{1},{2},{3},{4},{5},{6},{7}\n'.format(m_name, d_id, m_type, seed, rmse, 
+        fopen.write('0,{0},{1},{2},{3},{4},{5},{6},{7}\n'.format(m_name, d_id, m_type, seed, mse, 
             r2_score, log_loss, f1_score))
 
 def load_datasets():
@@ -239,7 +244,7 @@ def benchmark():
     """Main function to benchmark each function"""
 
     with open('compiled_results.csv', 'w') as fopen:
-        fopen.write('ID,MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n')
+        fopen.write('ID,MODEL,DATASET_ID,TYPE,SEED,MSE,R2_SCORE,LOGLOSS,F1_SCORE\n')
 
     test = generate_tests()
 

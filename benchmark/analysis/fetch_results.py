@@ -31,7 +31,7 @@ def download_data():
     RANGE = len(generate_tests())
 
     with open("compiled_results.csv", "wb") as f:
-        f.write('ID,MODEL,DATASET_ID,TYPE,SEED,RMSE,R2_SCORE,LOGLOSS,F1_SCORE\n'.encode('utf-8'))
+        f.write('ID,MODEL,DATASET_ID,TYPE,SEED,MSE,R2_SCORE,LOGLOSS,F1_SCORE\n'.encode('utf-8'))
         for c in tqdm(range(RANGE)):
             temp = TempFile()
             last_pos = f.tell()
