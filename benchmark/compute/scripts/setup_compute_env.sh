@@ -13,10 +13,10 @@ aws s3 cp $(python -m benchmark.config repo_ssh_key) s3://$(python -m benchmark.
 aws s3 cp $(python -m benchmark.config ec2_ssh_key) s3://$(python -m benchmark.config s3_bucket_root)/$(python -m benchmark.config s3_folder)ssh/
 
 #Ensure correct file permissions
-chmod 755 batch_job.sh
+chmod 755 benchmark/compute/batch/scripts/batch_job.sh
 
 #Build Docker Container
-docker build -t auto-ml-exploration .
+docker build -t auto-ml-exploration benchmark/compute/batch/scripts
 
 #Login to aws
 eval "$(aws ecr get-login --no-include-email)"
