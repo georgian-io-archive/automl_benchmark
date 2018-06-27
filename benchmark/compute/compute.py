@@ -1,4 +1,3 @@
-import boto3
 import pickle
 import subprocess
 import numpy as np
@@ -112,7 +111,10 @@ def delete_runs(fname):
     ids = [x[0] for v in x]
     
     for idx in tqdm(ids):
-          delete_file(idx)
+          try:
+              delete_file(idx)
+          except:
+              pass
 
 def export_failures(fname):
 

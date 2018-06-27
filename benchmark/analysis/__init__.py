@@ -1,6 +1,7 @@
 
 from .get_datasets import get_studies
 from .get_datasets import upload_datasets
+from .get_datasets import single_dataset
 
 from .run_analysis import analysis_suite
 
