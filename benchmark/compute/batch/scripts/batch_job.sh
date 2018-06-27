@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #Config matplotlib backend via matplotlibrc
-export MATPLOTLIBRC=/root/automl_benchmark/benchmark/compute/scripts
+export MATPLOTLIBRC=/root/automl_benchmark/benchmark/compute/batch/scripts
 
 #Config Java environmental variables
 export _JAVA_OPTIONS='-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap'

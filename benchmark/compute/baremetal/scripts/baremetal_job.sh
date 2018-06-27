@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #Config matplotlib backend via matplotlibrc
-export MATPLOTLIBRC=/root/automl_benchmark/benchmark/compute/scripts
+export MATPLOTLIBRC=/root/automl_benchmark/benchmark/compute/baremetal/scripts
 
 cd /root/
 cd automl_benchmark
