@@ -104,7 +104,7 @@ def upload_datasets():
 def get_studies():
     """Collects the data for a specified set of openml 'studies'"""
     studies = [[130, 'regression'],
-               [14, 'classification']]
+               [135, 'classification']]
 
     _make_data_dir()
 
