@@ -26,6 +26,17 @@ def execute():
     key = (s3_folder+"out/"+"results" + str(test[0]) +".csv")
     s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
 
+    key = '{}logs/pass/{}/{}-{}-{}'.format(s3_folder, test[1], test[2], test[3], test[4])
+    open('status', 'w').write(key)
 
 if __name__ == '__main__':
-    execute()
+    try:
+        execute()
+    except:
+
+        s3_bucket = os.getenv("S3_BUCKET")
+        s3_folder = os.getenv("S3_FOLDER","")
+        task = os.getenv("TASK")
+        test = task[1:-1].split(",")
+        key = '{}logs/fail/{}/{}-{}-{}'.format(s3_folder, test[1], test[2], test[3], test[4])
+        open('status', 'w').write(key)

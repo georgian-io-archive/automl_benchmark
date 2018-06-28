@@ -12,7 +12,6 @@ def local_benchmark(model, d_id, d_type, seed):
     """
     analysis.process(model, d_id, d_type, seed)
 
-
 def download_results():
     """Download run data from S3
     """
@@ -30,7 +29,13 @@ def execute_job():
     compute.update_environment()
     compute.run_full()
 
-def update_compute_env():
+def init_env():
+    """Init compute environment
+    """
+    analysis.upload_datasets()
+    compute.update_environment()
+
+def refresh_env():
     """Update compute environment to S3
     """
     compute.update_environment()
@@ -89,7 +94,8 @@ if __name__ == '__main__':
                  'fetch-results': [download_results,[],'Download results from S3 to local CSV'],
                  'download-data': [download_datasets,[],'Download datasets used'],
                  'execute-compute': [execute_job,[],'Run full benchmark suite on AWS'],
-                 'init-compute': [update_compute_env,[],'Init S3 env for AWS'],
+                 'init-compute': [init_env,[],'Init S3 env for AWS'],
+                 'refresh-compute': [refresh_env,[],'Lightweight update of S3 environment'],
                  'resume-compute': [resume_job,[],'Resume partially run job on AWS'],
                  'get-logs': [download_logs,[],'Download all logs locally'],
                  'clean-s3': [clean_environment,[],'Clean logs and output from S3'],

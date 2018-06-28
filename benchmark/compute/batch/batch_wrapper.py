@@ -60,7 +60,9 @@ def execute():
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
     key = (s3_folder+"out/"+"results" + str(runid) +".csv")
     s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
-
+    
+    key = '{}logs/pass/{}/{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
+    open('status', 'w').write(key) 
 
 if __name__ == '__main__':
     try:
@@ -82,26 +84,5 @@ if __name__ == '__main__':
         dtype = test_info[3]
         seed = test_info[4]
 
-        err = str(e).encode("utf-8")
-        key = '{}err/{}/{}-{}-{}-{}'.format(s3_folder, model, runid, dataset, dtype, seed)
-        s3.Bucket(s3_bucket).put_object(Key=key, Body=err)
-
-        for subdir, dirs, files in os.walk("/tmp"):
-            for file in files:
-                try:
-                    full_path = os.path.join(subdir, file)
-                    print(full_path)
-                    with open(full_path, 'rb') as data:
-                        data.seek(0)
-                        key = '{}err/tmp/{}-{}-{}-{}-{}/{}'.format(s3_folder, 
-                                                                  model, 
-                                                                  runid, 
-                                                                  dataset, 
-                                                                  dtype, 
-                                                                  seed, 
-                                                                  full_path[len('/tmp')+1:])
-                        print(key)
-                        s3.Bucket(s3_bucket).put_object(Key=key, Body=data)
-                except Exception as e:
-                    print('Error Saving File: ,', str(e))
-
+        key = '{}logs/fail/{}/{}-{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
+        open('status', 'w').write(key) 
