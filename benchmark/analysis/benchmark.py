@@ -154,10 +154,10 @@ def process_auto_ml(X_train, X_test, y_train, df_types, m_type, seed, *args):
         'PassiveAggressiveRegressor', 'RandomForestRegressor', 'SGDRegressor', 'XGBRegressor']
     
     automl = Predictor(type_of_estimator='classifier' if m_type == 'classification' else 'regressor',
-                       scoring='f1_score' if m_type == 'classification' else 'mean_squared_error',
                        column_descriptions=df_types)
 
     automl.train(X_train, model_names=cmodels if m_type == 'classification' else rmodels,
+        scoring='f1_score' if m_type == 'classification' else 'mean_squared_error',
         cv=5, verbose=False)
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
