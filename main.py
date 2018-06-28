@@ -7,7 +7,7 @@ import sys
 from benchmark import analysis
 from benchmark import compute
 
-def local_benchmark():
+def local_benchmark(model, d_id, d_type, seed):
     """Use command line args to process single run
     """
     analysis.process(model, d_id, d_type, seed)

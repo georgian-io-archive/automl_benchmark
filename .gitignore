@@ -114,3 +114,4 @@ tests.dat
 *.swp
 figures/
 *.dat
+logs/
