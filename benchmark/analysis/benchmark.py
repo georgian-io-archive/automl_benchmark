@@ -1,4 +1,5 @@
 
+"""
 if __name__ == '__main__':
     # this needs to be here because other libs import mp
     import multiprocessing as mp
@@ -6,6 +7,7 @@ if __name__ == '__main__':
         mp.set_start_method('forkserver')
     except RuntimeError:
         print('Failed to set forkserver')
+"""
 import signal
 
 import numpy as np
@@ -60,7 +62,7 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed, *args):
 
     from tpot import TPOTClassifier
     from tpot import TPOTRegressor
-    from tpot_config import classifier_config_dict
+    from ..config import classifier_config_dict
 
     # Register Timer
     def handler(signum, frame):
