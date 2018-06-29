@@ -42,7 +42,7 @@ aws s3 cp s3://${S3_BUCKET}/${S3_FOLDER}tests.dat ./
 #Execute benchmark
 timeout 12600 python -m benchmark.compute.batch.batch_wrapper > logs.out 2>&1
 
-aws cp logs.out s3://${S3_BUCKET}/$(cat status)/$(date +%Y%m%d%H%M%S).log
+aws s3 cp logs.out s3://${S3_BUCKET}/$(cat status)/$(date +%Y%m%d%H%M%S).log
 
 
 exit 0
