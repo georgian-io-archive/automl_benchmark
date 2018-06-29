@@ -1,13 +1,5 @@
 #!/usr/bin/env python
 
-if __name__ == '__main__':
-    # this needs to be here because other libs import mp
-    import multiprocessing as mp
-    try:
-        mp.set_start_method('forkserver')
-    except RuntimeError:
-        print('Failed to set forkserver')
-
 import os
 import pickle
 import boto3
@@ -65,6 +57,8 @@ def execute():
     open('status', 'w').write(key) 
 
 if __name__ == '__main__':
+    execute()
+    quit()
     try:
         execute()
     except Exception as e:
