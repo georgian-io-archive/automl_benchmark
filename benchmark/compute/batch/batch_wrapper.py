@@ -58,7 +58,6 @@ def execute():
 
 if __name__ == '__main__':
     try:
-        raise Exception
         execute()
     except Exception as e:
         
