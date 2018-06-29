@@ -1,5 +1,13 @@
 #!/usr/bin/env python
 
+if __name__ == '__main__':
+    # this needs to be here because other libs import mp
+    import multiprocessing as mp
+    try:
+        mp.set_start_method('forkserver')
+    except RuntimeError:
+        print('Failed to set forkserver')
+
 import os
 import pickle
 import boto3
@@ -36,14 +44,6 @@ def execute():
     dataset = test_info[2]
     dtype = test_info[3]
     seed = test_info[4]
-
-    if model == 'tpot':
-        import multiprocessing as mp
-        # this needs to be here because other libs import mp
-        try:
-            mp.set_start_method('forkserver')
-        except RuntimeError:
-            print('Failed to set forkserver')
 
     #Download dataset
     from ...analysis import single_dataset
@@ -84,5 +84,5 @@ if __name__ == '__main__':
         dtype = test_info[3]
         seed = test_info[4]
 
-        key = '{}logs/fail/{}/{}-{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
+        key = '{}logs/fail/{}/{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
         open('status', 'w').write(key) 
