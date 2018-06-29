@@ -20,7 +20,7 @@ class AWSBatchDispatch(Dispatcher):
                  jobDefinition=definition,
                  containerOverrides={"vcpus":vcpus,"memory":memory,
                  "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder}]},
-                 timeout={'attemptDurationSeconds':12600})
+                 timeout={'attemptDurationSeconds':13500})
 
     @classmethod
     def process(cls, tests):
