@@ -7,7 +7,7 @@ cd /root/
 cd automl_benchmark
 source automl_benchmark/bin/activate
 
-timeout 12600 python benchmark/compute/baremetal/baremetal_wrapper.py
+timeout 12600 python -m benchmark.compute.baremetal.baremetal_wrapper
 
 killall java
 killall python
