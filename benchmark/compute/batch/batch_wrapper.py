@@ -44,21 +44,19 @@ def execute():
     #Execute benchmark
     from ...analysis import process
     print(model, dataset, dtype, seed)
-    #results = process(model, dataset, dtype, seed)
+    results = process(model, dataset, dtype, seed)
 
     #Upload results to s3
     s3 = boto3.resource('s3')
 
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
     key = (s3_folder+"out/"+"results" + str(runid) +".csv")
-    #s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
+    s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
     
     key = '{}logs/pass/{}/{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
     open('status', 'w').write(key) 
 
 if __name__ == '__main__':
-    execute()
-    quit()
     try:
         execute()
     except Exception as e:
