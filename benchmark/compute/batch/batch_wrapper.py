@@ -76,5 +76,7 @@ if __name__ == '__main__':
         dtype = test_info[3]
         seed = test_info[4]
 
+        print(e)
+
         key = '{}logs/fail/{}/{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
         open('status', 'w').write(key) 
