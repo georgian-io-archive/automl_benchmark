@@ -51,7 +51,7 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args
     automl.fit(X_train.copy(),
         y_train.copy(), 
         feat_type=categ_cols,
-        metric=f1_weighted if 'classification' else mean_squared_error)
+        metric=f1_weighted if m_type == 'classification' else mean_squared_error)
     automl.refit(X_train.copy(), y_train.copy())
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
