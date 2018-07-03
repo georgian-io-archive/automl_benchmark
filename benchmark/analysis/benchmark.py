@@ -51,7 +51,7 @@ def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args
     automl.fit(X_train.copy(),
         y_train.copy(), 
         feat_type=categ_cols,
-        metric=f1_weighted if 'classification' else mean_squared_error)
+        metric=f1_weighted if m_type == 'classification' else mean_squared_error)
     automl.refit(X_train.copy(), y_train.copy())
 
     return (automl.predict_proba(X_test) if m_type == 'classification' else 
@@ -93,6 +93,7 @@ def process_tpot(X_train, X_test, y_train, df_types, m_type, seed, *args):
     # for long running processes TPOT sometimes does not end even with generations
     signal.alarm(TIME_PER_TASK+GRACE_PERIOD)
     automl.fit(X_train.values, y_train.values)
+    signal.alarm(0)
 
     return (automl.predict_proba(X_test.values) if m_type == 'classification' else 
             automl.predict(X_test.values))
