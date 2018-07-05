@@ -22,7 +22,7 @@ yum -y install wget java-1.8.0-openjdk antlr-tool autoconf boost-devel expat-dev
 #Setup RSA
 aws s3 cp --recursive s3://${S3_BUCKET}/${S3_FOLDER}ssh /root/.ssh
 chmod -R 400 /root/.ssh
-chmod 755 /root/.ssh/batch
+chmod 755 /root/.ssh/git
 
 #Install swig
 export PATH=$PATH:/usr/local/bin
@@ -36,7 +36,7 @@ make install
 cd /root/
 
 #Clone down repository
-export GIT_SSH_COMMAND="ssh -F /root/.ssh/batch -o StrictHostKeyChecking=no"
+export GIT_SSH_COMMAND="ssh -F /root/.ssh/git -o StrictHostKeyChecking=no"
 git clone repo:georgianpartners/automl_benchmark automl_benchmark
 cd  automl_benchmark
 
