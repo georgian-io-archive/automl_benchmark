@@ -26,7 +26,7 @@ class BareDispatch(Dispatcher):
         print("Provisioning Servers...")
         time.sleep(60)
         prov = []
-        for ip in ips: prov.append(subprocess.Popen('ssh -i ' + key + ' ec2-user@' + ip + ' "sudo S3_BUCKET=' + s3_bucket  +  ' bash -s" < benchmark/compute/baremetal/scripts/provision_baremetal.sh', shell=True))
+        for ip in ips: prov.append(subprocess.Popen('ssh -F benchmark/config/ssh/baremetal -i ' + key + ' ec2-user@' + ip + ' "sudo S3_BUCKET=' + s3_bucket  +  ' bash -s" < benchmark/compute/baremetal/scripts/provision_baremetal.sh', shell=True))
         codes = [p.wait() for p in prov]
         print("Servers successfully provisioned")
         return instances, ips
@@ -45,7 +45,7 @@ class BareDispatch(Dispatcher):
 
     @staticmethod
     def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder, key):
-        ssh_cmd = 'ssh -i ' + key + ' ec2-user@' + ip
+        ssh_cmd = 'ssh -F benchmark/config/ssh/baremetal -i ' + key + ' ec2-user@' + ip
         exec_cmd = 'nohup bash /root/automl_benchmark/benchmark/compute/baremental/scripts/baremetal_job.sh > logs.out 2>&1'
         s3_cmd = 'sudo S3_BUCKET=' + bucket_name + ' S3_FOLDER=' + s3_folder
         task_cmds = ' && '.join([s3_cmd + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' ' + exec_cmd for t in tests])
