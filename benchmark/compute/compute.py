@@ -130,9 +130,10 @@ def cleanup():
     with open("running.dat", "rb") as f:
         dat = pickle.load(f)
 
+    ec2 = boto3.resource('ec2')
     for i in dat:
-        i.reload()
-        i.terminate()
+        ins = ec2.Instance(i)
+        ins.terminate()
 
 def clean_s3():
 
