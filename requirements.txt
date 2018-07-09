@@ -20,7 +20,7 @@ dill==0.2.7.1
 docutils==0.14
 fasteners==0.14.1
 future==0.16.0
--f https://h2o-release.s3.amazonaws.com/h2o/rel-wright/2/Python/h2o-3.20.0.2-py2.py3-none-any.whl h2o
+https://h2o-release.s3.amazonaws.com/h2o/rel-wright/2/Python/h2o-3.20.0.2-py2.py3-none-any.whl#egg=h2o
 h5py==2.7.1
 idna==2.6
 imagesize==1.0.0

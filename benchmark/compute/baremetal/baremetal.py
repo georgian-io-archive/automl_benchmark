@@ -46,7 +46,7 @@ class BareDispatch(Dispatcher):
     @staticmethod
     def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder, key):
         ssh_cmd = 'ssh -F benchmark/config/ssh/baremetal -i ' + key + ' ec2-user@' + ip
-        exec_cmd = 'nohup bash /root/automl_benchmark/benchmark/compute/baremental/scripts/baremetal_job.sh > logs.out 2>&1'
+        exec_cmd = 'nohup bash /root/automl_benchmark/benchmark/compute/baremetal/scripts/baremetal_job.sh > logs.out 2>&1'
         s3_cmd = 'sudo S3_BUCKET=' + bucket_name + ' S3_FOLDER=' + s3_folder
         task_cmds = ' && '.join([s3_cmd + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' ' + exec_cmd for t in tests])
         cmd = ssh_cmd + ' "' + task_cmds + '"'
