@@ -8,7 +8,7 @@ import pickle
 from ...config import load_config
 from ..dispatcher import Dispatcher, AutoMLMethods
 
-@AutoMLMethods('h2o')
+@AutoMLMethods('h2o','auto-sklearn','tpot')
 class BareDispatch(Dispatcher):
 
     @staticmethod
