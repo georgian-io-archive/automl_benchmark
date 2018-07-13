@@ -131,9 +131,12 @@ def cleanup():
         dat = pickle.load(f)
 
     ec2 = boto3.resource('ec2')
-    for i in dat:
-        ins = ec2.Instance(i)
-        ins.terminate()
+    for i in tqdm(dat):
+        try:
+          ins = ec2.Instance(i)
+          ins.terminate()
+        except:
+          pass
 
 def clean_s3():
 
