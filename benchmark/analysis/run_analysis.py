@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import PathPatch
+from matplotlib.lines import Line2D
 plt.style.use(['fivethirtyeight'])
 
 import matplotlib as mpl
@@ -68,10 +70,7 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
     counts = missing_df.groupby(['TYPE', 'MODEL'])['DATASET_ID'].value_counts()
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
-    drop_dids = np.unique(drop_datasets).tolist()
-    #Drop datasets used in auto-sklearn meta-learning
-    drop_dids.extend([3, 6, 12, 14, 16, 18, 21, 22, 23, 24, 28,
-                      31, 32, 36, 38, 44, 46, 60, 182, 300, 554, 1112, 1114, 1120])
+    drop_dids = pd.unique(drop_datasets).tolist()
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
 
     return runs_df
@@ -86,8 +85,6 @@ def drop_missing_runs(runs_df, missing_df):
     """
     drop_tuples = list(set(missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()))
     dataset_missing = pd.DataFrame(drop_tuples, columns=['DATASET_ID', 'SEED'])['DATASET_ID'].value_counts()
-    drop_dids = dataset_missing[dataset_missing > 5].index.values.tolist()
-    runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
     runs_df = runs_df.set_index(['DATASET_ID', 'SEED'])
     runs_df = runs_df.drop(index=drop_tuples).reset_index()
     runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'MSE', 'R2_SCORE', 'LOGLOSS', 
@@ -287,7 +284,7 @@ def pairwise_comp_viz(mu_df, target):
         return color_range
 
     mu_df = mu_df[target]
-    models = np.unique(mu_df.index.get_level_values('MODEL').values)
+    models = pd.unique(mu_df.index.get_level_values('MODEL').values)
     combos = list(itertools.combinations(models, 2))
     plot_count = len(combos)
     rows, cols = square_fac(plot_count)
@@ -320,7 +317,8 @@ def pairwise_comp_viz(mu_df, target):
     for sc, ax in zip(scatters, ax_list.ravel()):
         cbar = fig.colorbar(sc, ax=ax, fraction=0.046, pad=0.08)
         cbar.ax.tick_params(labelsize=10)
-        cbar.set_label('Normalized {} Difference'.format(metric_name), rotation=90, fontsize=8,
+        ax_str = '{} Difference' if target == 'F1_score' else 'Standardized Inverted {} Difference'
+        cbar.set_label(ax_str.format(metric_name), rotation=90, fontsize=8,
             labelpad=-57) # if target == 'F1_SCORE' else -65)
 
     fig.suptitle('Dataset Mean {} Across Frameworks'.format(metric_name))
@@ -331,10 +329,29 @@ def pairwise_comp_viz(mu_df, target):
                                                                                   transparent=True)
     # plt.show()
 
+def boxplot_viz(clean_df, target):
+    clean_df = clean_df[target]
+    models = pd.unique(clean_df.index.values)
+    data_arr = np.array([clean_df[m].values for m in models]).T
+    base_colors = [hsl2hex(c) for c in color_scale((0., 0.8, 0.6), (0.8, 0.8, 0.6), len(models))]
+    plt.figure(figsize=(7, 3.5))
+    title_str = "Raw Per Model {} Comparison ({})".format('Classification' if target=='F1_SCORE' else 'Regression', target)
+    plt.title(title_str, size=12)
+    bplot = plt.boxplot(data_arr, vert=False, patch_artist=True, notch=True, labels="    ")
+
+    for p, c in zip(bplot['boxes'], base_colors):
+        p.set_facecolor(c)
+
+    plt.legend(bplot['boxes'], models, loc='lower left', prop={'size': 8})
+    plt.setp(bplot['fliers'], markeredgecolor='grey')
+    plt.setp(bplot['medians'], color='black')
+
+    # plt.show()
+    plt.savefig('figures/RawDataBoxPlot{}.png'.format(target), dpi=plt.gcf().dpi, transparent=True)
 
 def standardize_mse(runs_df):
     print('Standardizing and scaling MSE...')
-    regression_dids = np.unique(runs_df[runs_df['TYPE'] == 'regression']['DATASET_ID'].values)
+    regression_dids = pd.unique(runs_df[runs_df['TYPE'] == 'regression']['DATASET_ID'].values)
     for d_id in regression_dids:
         runs_df.loc[runs_df['DATASET_ID'] == d_id, 'MSE'] = 1 - MinMaxScaler().fit_transform(zscore(
             runs_df[runs_df['DATASET_ID'] == d_id]['MSE'].values).reshape((-1, 1))).ravel()
@@ -367,6 +384,10 @@ def per_dataset_mean_std(runs_df):
     return processed.mean(), processed.std()
 
 
+def original_dataset_clean(runs_df):
+    return runs_df.drop(columns=['SEED', 'ID']).set_index(['TYPE', 'MODEL'])
+
+
 def analysis_suite():
     """An automatic suite that performs analysis on the computed results of the benchmarking process"""
 
@@ -382,7 +403,6 @@ def analysis_suite():
     rd_mu, rd_std = per_dataset_mean_std(r_df)
     c_mu, c_std = per_model_mean_std(c_df)
     r_mu, r_std = per_model_mean_std(r_df)
-
     deduplicated_missing = list(set([tuple(v) for v in missing_df[['DATASET_ID', 
                                                                    'SEED']].values]))
     deduplicated_df = pd.DataFrame(deduplicated_missing, columns=['DATASET_ID', 'COUNT'])
@@ -417,3 +437,7 @@ def analysis_suite():
     correlation_viz(runs_df, targets={'classification':('F1_SCORE',['DIMENSIONALITY','ROWS']),
                                        'regression':('MSE',['DIMENSIONALITY','ROWS'])})
 
+    print('Creating classification boxplot visualization...')
+    boxplot_viz(c_df.drop(columns=['ID', 'SEED', 'TYPE']).set_index(['MODEL']), target='F1_SCORE')
+    print('Creating regression boxplot visualization...')
+    boxplot_viz(r_df.drop(columns=['ID', 'SEED', 'TYPE']).set_index(['MODEL']), target='MSE')
