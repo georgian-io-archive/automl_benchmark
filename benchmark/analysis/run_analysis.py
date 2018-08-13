@@ -395,8 +395,9 @@ def analysis_suite():
     print('Dropped items per datasets (>5 drop entire dataset)...\n', drop_counts)
     print('Total dropped datasets: ', dropped_dataset_count)
     print('Other dropped points: ', dropped_points)
-    print('percentage {}/5200: {}'.format(total_dropped_points, 
-                                          total_dropped_points/RUN_COUNT))
+    print('percentage {}/{}: {}'.format(total_dropped_points,
+                                        RUN_COUNT,
+                                        total_dropped_points/RUN_COUNT))
     
     print('Classification per model means...\n', c_mu)
     print('Classification per model standard deviation...\n', c_std)
