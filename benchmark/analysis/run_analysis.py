@@ -370,6 +370,7 @@ def per_dataset_mean_std(runs_df):
 def analysis_suite():
     """An automatic suite that performs analysis on the computed results of the benchmarking process"""
 
+    RUN_COUNT = 4350
     runs_df = pd.read_csv('./compiled_results.csv')
     runs_df['R2_SCORE'] = runs_df['R2_SCORE'].abs()
     missing_df = compute_missing_runs(runs_df)
@@ -388,14 +389,14 @@ def analysis_suite():
     drop_counts = deduplicated_df['DATASET_ID'].value_counts()
     dropped_dataset_count = len(drop_counts[drop_counts > 5])
     dropped_points = drop_counts[drop_counts <= 5].sum()
-    total_dropped_points = dropped_dataset_count*10+dropped_points*4
+    total_dropped_points = dropped_dataset_count*40+dropped_points*4
 
     print('Missing by Model...\n', missing_df['MODEL'].value_counts())
     print('Dropped items per datasets (>5 drop entire dataset)...\n', drop_counts)
     print('Total dropped datasets: ', dropped_dataset_count)
     print('Other dropped points: ', dropped_points)
     print('percentage {}/5200: {}'.format(total_dropped_points, 
-                                          total_dropped_points/5200))
+                                          total_dropped_points/RUN_COUNT))
     
     print('Classification per model means...\n', c_mu)
     print('Classification per model standard deviation...\n', c_std)
