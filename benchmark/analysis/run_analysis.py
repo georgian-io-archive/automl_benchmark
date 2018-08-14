@@ -1,16 +1,18 @@
 import itertools
+from operator import itemgetter
 import os
 
 from colour import Color, color_scale, hsl2hex
 import numpy as np
 import pandas as pd
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.patches import PathPatch
 from matplotlib.lines import Line2D
 plt.style.use(['fivethirtyeight'])
 
-import matplotlib as mpl
+
 from scipy.stats import zscore
 from sklearn.preprocessing import MinMaxScaler
 
@@ -54,7 +56,7 @@ def compute_missing_runs(runs_df):
     missing_df = pd.DataFrame(missing, columns=['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED'])
     missing_df['DATASET_ID'] = missing_df['DATASET_ID'].astype(int)
 
-    return missing_df
+    return missing_df, len(tests)
 
 def drop_missing_datasets(runs_df, missing_df, missing_thresh):
     """If a dataset is missing more than or equal to the missing_thresh for a specific combination of 
@@ -71,9 +73,10 @@ def drop_missing_datasets(runs_df, missing_df, missing_thresh):
     counts = counts[counts >= missing_thresh]
     drop_datasets = counts.index.get_level_values('DATASET_ID').values
     drop_dids = pd.unique(drop_datasets).tolist()
+    drop_num = len(set(runs_df['DATASET_ID'].values.tolist()) & set(drop_dids))
     runs_df = runs_df[~runs_df['DATASET_ID'].isin(drop_dids)]
 
-    return runs_df
+    return runs_df, drop_num
 
 def drop_missing_runs(runs_df, missing_df):
     """In order to make the comparisons even across models, all runs that did not complete in one
@@ -90,7 +93,7 @@ def drop_missing_runs(runs_df, missing_df):
     runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'MSE', 'R2_SCORE', 'LOGLOSS', 
                        'F1_SCORE']]
 
-    return runs_df
+    return runs_df, len(drop_tuples)
 
 
 def split_by_type(runs_df):
@@ -283,10 +286,12 @@ def pairwise_comp_viz(mu_df, target):
         color_range = [c.hex_l for c in (c1_bins + c2_bins)]
         return color_range
 
+    sort_order = {'auto-sklearn': 1, 'tpot': 2, 'h2o': 3, 'auto_ml': 4}
     mu_df = mu_df[target]
-    models = pd.unique(mu_df.index.get_level_values('MODEL').values)
+    models = sorted(pd.unique(mu_df.index.get_level_values('MODEL').values), key=lambda x: sort_order[x])
     combos = list(itertools.combinations(models, 2))
-    plot_count = len(combos)
+    sorted_combos = list(sorted(combos, key=lambda x: (sort_order[x[0]], sort_order[x[1]])))
+    plot_count = len(sorted_combos)
     rows, cols = square_fac(plot_count)
     fig, ax_list = plt.subplots(rows, cols)
     fig.set_size_inches(17, 8)
@@ -299,7 +304,7 @@ def pairwise_comp_viz(mu_df, target):
     # get min-max of differences
     vmin = np.inf
     vmax = -np.inf
-    for m1, m2 in combos:
+    for m1, m2 in sorted_combos:
         m1_values = mu_df.xs(m1, level=1).values
         m2_values = mu_df.xs(m2, level=1).values
         colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
@@ -308,7 +313,7 @@ def pairwise_comp_viz(mu_df, target):
         if np.min(colors) < vmin:
             vmin = np.min(colors)
 
-    for combo, ax in zip(combos, ax_list.ravel()):
+    for combo, ax in zip(sorted_combos, ax_list.ravel()):
         m1, m2 = combo
         color_range = get_color_range(Color(model_colors[m1]), Color(model_colors[m2]), color_bins)
         cmap = mpl.colors.ListedColormap(color_range)
@@ -337,25 +342,26 @@ def boxplot_viz(clean_df, target):
     plt.figure(figsize=(7, 3.5))
     title_str = "Raw Per Model {} Comparison ({})".format('Classification' if target=='F1_SCORE' else 'Regression', target)
     plt.title(title_str, size=12)
-    bplot = plt.boxplot(data_arr, vert=False, patch_artist=True, notch=True, labels="    ")
+    bplot = plt.boxplot(data_arr, vert=False, patch_artist=True, notch=True, labels="    ", positions=list(reversed(range(1, len(models)+1))))
 
     for p, c in zip(bplot['boxes'], base_colors):
         p.set_facecolor(c)
 
-    plt.legend(bplot['boxes'], models, loc='lower left', prop={'size': 8})
+    plt.legend(bplot['boxes'], models, loc='lower left', prop={'size': 8}, fancybox=True, framealpha=0.6)
     plt.setp(bplot['fliers'], markeredgecolor='grey')
     plt.setp(bplot['medians'], color='black')
 
     # plt.show()
     plt.savefig('figures/RawDataBoxPlot{}.png'.format(target), dpi=plt.gcf().dpi, transparent=True)
 
-def standardize_mse(runs_df):
-    print('Standardizing and scaling MSE...')
-    regression_dids = pd.unique(runs_df[runs_df['TYPE'] == 'regression']['DATASET_ID'].values)
-    for d_id in regression_dids:
-        runs_df.loc[runs_df['DATASET_ID'] == d_id, 'MSE'] = 1 - MinMaxScaler().fit_transform(zscore(
-            runs_df[runs_df['DATASET_ID'] == d_id]['MSE'].values).reshape((-1, 1))).ravel()
-
+def standardize_scale(runs_df, target, invert=False):
+    print('Standardizing and scaling {}...'.format(target))
+    m_type = 'classification' if target == 'F1_SCORE' else 'regression'
+    d_ids = pd.unique(runs_df[runs_df['TYPE'] == m_type]['DATASET_ID'].values)
+    for d_id in d_ids:
+        transformation = MinMaxScaler().fit_transform(zscore(
+            runs_df[runs_df['DATASET_ID'] == d_id][target].values).reshape((-1, 1))).ravel()
+        runs_df.loc[runs_df['DATASET_ID'] == d_id, target] = 1 - transformation if invert else transformation
     return runs_df
 
 def per_model_mean_std(runs_df):
@@ -391,42 +397,35 @@ def original_dataset_clean(runs_df):
 def analysis_suite():
     """An automatic suite that performs analysis on the computed results of the benchmarking process"""
 
-    RUN_COUNT = 4350
     runs_df = pd.read_csv('./compiled_results.csv')
     runs_df['R2_SCORE'] = runs_df['R2_SCORE'].abs()
-    missing_df = compute_missing_runs(runs_df)
-    runs_df = drop_missing_datasets(runs_df, missing_df, 10)
-    runs_df = drop_missing_runs(runs_df, missing_df)
-    runs_df = standardize_mse(runs_df)
+    missing_df, total_run_count = compute_missing_runs(runs_df)
+    runs_df, drop_d_count = drop_missing_datasets(runs_df, missing_df, 10)
+    runs_df, drop_r_count = drop_missing_runs(runs_df, missing_df)
+    runs_df = standardize_scale(runs_df, 'MSE', invert=True)
+    runs_df = standardize_scale(runs_df, 'F1_SCORE')
     c_df, r_df = split_by_type(runs_df)
     cd_mu, cd_std = per_dataset_mean_std(c_df)
     rd_mu, rd_std = per_dataset_mean_std(r_df)
     c_mu, c_std = per_model_mean_std(c_df)
     r_mu, r_std = per_model_mean_std(r_df)
-    deduplicated_missing = list(set([tuple(v) for v in missing_df[['DATASET_ID', 
-                                                                   'SEED']].values]))
-    deduplicated_df = pd.DataFrame(deduplicated_missing, columns=['DATASET_ID', 'COUNT'])
-    drop_counts = deduplicated_df['DATASET_ID'].value_counts()
-    dropped_dataset_count = len(drop_counts[drop_counts > 5])
-    dropped_points = drop_counts[drop_counts <= 5].sum()
-    total_dropped_points = dropped_dataset_count*40+dropped_points*4
+    total_dropped_points = drop_d_count*40+drop_r_count*4
 
     print('Missing by Model...\n', missing_df['MODEL'].value_counts())
-    print('Dropped items per datasets (>5 drop entire dataset)...\n', drop_counts)
-    print('Total dropped datasets: ', dropped_dataset_count)
-    print('Other dropped points: ', dropped_points)
+    print('Total dropped datasets: ', drop_d_count)
+    print('Other dropped points: ', drop_r_count)
     print('percentage {}/{}: {}'.format(total_dropped_points,
-                                        RUN_COUNT,
-                                        total_dropped_points/RUN_COUNT))
+                                        total_run_count,
+                                        total_dropped_points/total_run_count))
     
     print('Classification per model means...\n', c_mu)
     print('Classification per model standard deviation...\n', c_std)
     print('Regression per model means...\n', r_mu)
     print('Regression per model standard deviation...\n', r_std)
 
-    print('Creating classification visualization...')
+    print('Creating classification pairwise visualization...')
     pairwise_comp_viz(cd_mu, target='F1_SCORE')
-    print('Creating regression visualization...')
+    print('Creating regression pairwise visualization...')
     pairwise_comp_viz(rd_mu, target='MSE')
     
     print('Creating dataset visualization...')
