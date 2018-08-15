@@ -18,7 +18,7 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn import metrics
 from tqdm import tqdm
 
-TIME_PER_TASK = os.getenv("TIME", 10800) # seconds (1.5 hours)
+TIME_PER_TASK = int(os.getenv("TIME", 10800)) # seconds (1.5 hours)
 GRACE_PERIOD = 300
 MIN_MEM = "7g"
 MAX_MEM = '100g'
