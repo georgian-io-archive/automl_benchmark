@@ -11,6 +11,7 @@ if __name__ == '__main__':
 import signal
 
 import numpy as np
+import os
 import pandas as pd
 import sklearn.model_selection
 from sklearn.preprocessing import OneHotEncoder
