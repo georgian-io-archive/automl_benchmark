@@ -12,7 +12,7 @@ from ..dispatcher import Dispatcher, AutoMLMethods
 class BareDispatch(Dispatcher):
 
     @staticmethod
-    def provision_instances(num, template_id, instance_type, s3_bucket, key, rtime):
+    def provision_instances(num, template_id, instance_type, s3_bucket, key, rtime, cores):
         """Provisions spot EC2 instances with H2O AMI"""
         ec2 = boto3.resource('ec2')
         instances = ec2.create_instances(ImageId=load_config()["cluster_image"],InstanceType=instance_type,MinCount=num,MaxCount=num,
@@ -26,7 +26,7 @@ class BareDispatch(Dispatcher):
         print("Provisioning Servers...")
         time.sleep(60)
         prov = []
-        for ip in ips: prov.append(subprocess.Popen('ssh -F benchmark/config/ssh/baremetal -i ' + key + ' ec2-user@' + ip + ' "sudo TIME=' +  str(rtime) + ' S3_BUCKET=' + s3_bucket  +  ' bash -s" < benchmark/compute/baremetal/scripts/provision_baremetal.sh', shell=True))
+        for ip in ips: prov.append(subprocess.Popen('ssh -F benchmark/config/ssh/baremetal -i ' + key + ' ec2-user@' + ip + ' "sudo CORES=' + str(cores) + ' TIME=' +  str(rtime) + ' S3_BUCKET=' + s3_bucket  +  ' bash -s" < benchmark/compute/baremetal/scripts/provision_baremetal.sh', shell=True))
         codes = [p.wait() for p in prov]
         print("Servers successfully provisioned")
         return instances, ips
@@ -44,10 +44,10 @@ class BareDispatch(Dispatcher):
         return out
 
     @staticmethod
-    def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder, key, rtime):
+    def dispatch(tests, ip, s3_bucket, bucket_name, s3_folder, key, rtime, cores):
         ssh_cmd = 'ssh -F benchmark/config/ssh/baremetal -i ' + key + ' ec2-user@' + ip
         exec_cmd = 'nohup bash /root/automl_benchmark/benchmark/compute/baremetal/scripts/baremetal_job.sh > logs.out 2>&1'
-        s3_cmd = 'sudo TIME=' + str(rtime) +  ' S3_BUCKET=' + bucket_name + ' S3_FOLDER=' + s3_folder
+        s3_cmd = 'sudo CORES=' + str(cores) + ' TIME=' + str(rtime) +  ' S3_BUCKET=' + bucket_name + ' S3_FOLDER=' + s3_folder
         task_cmds = ' && '.join([s3_cmd + ' TASK=' + str(t).replace('\'','').replace(' ','') + ' ' + exec_cmd for t in tests])
         cmd = ssh_cmd + ' "' + task_cmds + '"'
         print(cmd)
@@ -70,17 +70,18 @@ class BareDispatch(Dispatcher):
         cluster_type = config["cluster_type"]
         key_loc = config["ec2_ssh_key"]
         rtime = config["hard_limit"]
+        cores = config["cores"]
 
         s3 = boto3.resource('s3')
         bucket = s3.Bucket(s3_bucket)
 
         instances, ips = cls.provision_instances(cluster_size, template_id, 
-                                                 cluster_type, s3_bucket, key_loc, rtime)
+                                                 cluster_type, s3_bucket, key_loc, rtime, cores)
         threads = []
 
         for i, c in enumerate(cls.chunk(tests, len(ips))):
             t = threading.Thread(target=cls.dispatch, args=(c, ips[i], bucket, s3_bucket, 
-                                                            s3_folder, key_loc))
+                                                            s3_folder, key_loc, rtime, cores))
             threads.append(t)
             t.start()
 

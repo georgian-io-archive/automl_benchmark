@@ -19,7 +19,7 @@ class AWSBatchDispatch(Dispatcher):
                  arrayProperties={"size":size},
                  jobDefinition=definition,
                  containerOverrides={"vcpus":vcpus,"memory":memory,
-                 "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder},{"name":"TIME","value":str(rtime)}]},
+                 "environment":[{"name":"S3_BUCKET","value":s3_bucket},{"name":"S3_FOLDER","value":s3_folder},{"name":"TIME","value":str(rtime)},{"name":"CORES","value":vcpus}]},
                  timeout={'attemptDurationSeconds':load_config()["hard_limit"] + 300})
 
     @classmethod

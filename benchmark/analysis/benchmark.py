@@ -16,13 +16,12 @@ import sklearn.model_selection
 from sklearn.preprocessing import OneHotEncoder
 from sklearn import metrics
 from tqdm import tqdm
-from ..config import load_config
 
-TIME_PER_TASK = load_config()["runtime"] # seconds (1.5 hours)
+TIME_PER_TASK = os.getenv("TIME", 10800) # seconds (1.5 hours)
 GRACE_PERIOD = 300
-MIN_MEM = "{}M".format(load_config()["memory"])
+MIN_MEM = "7g"
 MAX_MEM = '100g'
-N_CORES = load_config()["cores"]
+N_CORES = int(os.getenv("CORES", 2))
 
 def process_auto_sklearn(X_train, X_test, y_train, df_types, m_type, seed, *args):
     """Function that trains and tests data using auto-sklearn"""
