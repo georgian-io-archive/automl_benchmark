@@ -355,6 +355,7 @@ def boxplot_viz(clean_df, target):
     plt.savefig('figures/RawDataBoxPlot{}.png'.format(target), dpi=plt.gcf().dpi, transparent=True)
 
 def standardize_scale(runs_df, target, invert=False):
+    runs_df = runs_df.copy()
     print('Standardizing and scaling {}...'.format(target))
     m_type = 'classification' if target == 'F1_SCORE' else 'regression'
     d_ids = pd.unique(runs_df[runs_df['TYPE'] == m_type]['DATASET_ID'].values)
@@ -364,18 +365,31 @@ def standardize_scale(runs_df, target, invert=False):
         runs_df.loc[runs_df['DATASET_ID'] == d_id, target] = 1 - transformation if invert else transformation
     return runs_df
 
-def per_model_mean_std(runs_df):
-    """Computes the grouped mean and median by model type
+def per_model_median_iqr(runs_df):
+    """Computes the grouped median and iqr by model type
     Args: 
         runs_df (pd.Dataframe): A list of all the runs
     Returns:
-        A tuple of pandas Dataframes that represent the mean and variance of each model
+        A tuple of pandas Dataframes that represent the median and iqr of each model
     """
 
     overall = runs_df.drop(columns=['SEED', 'ID']).groupby(['TYPE', 'MODEL', 'DATASET_ID'], 
         as_index=False).mean()
     collected = overall.drop(columns=['DATASET_ID']).groupby(['TYPE', 'MODEL'])
-    return collected.mean(), collected.std()
+    return collected.median(), collected.quantile(0.75)-collected.quantile(0.25)
+
+def per_model_mean(runs_df):
+    """Computes the grouped mean and std by model type
+    Args: 
+        runs_df (pd.Dataframe): A list of all the runs
+    Returns:
+        A tuple of pandas Dataframes that represent the mean and std of each model
+    """
+
+    overall = runs_df.drop(columns=['SEED', 'ID']).groupby(['TYPE', 'MODEL', 'DATASET_ID'], 
+        as_index=False).mean()
+    collected = overall.drop(columns=['DATASET_ID']).groupby(['TYPE', 'MODEL'])
+    return collected.mean()
 
 
 def per_dataset_mean_std(runs_df):
@@ -402,13 +416,16 @@ def analysis_suite():
     missing_df, total_run_count = compute_missing_runs(runs_df)
     runs_df, drop_d_count = drop_missing_datasets(runs_df, missing_df, 10)
     runs_df, drop_r_count = drop_missing_runs(runs_df, missing_df)
-    runs_df = standardize_scale(runs_df, 'MSE', invert=True)
-    runs_df = standardize_scale(runs_df, 'F1_SCORE')
-    c_df, r_df = split_by_type(runs_df)
-    cd_mu, cd_std = per_dataset_mean_std(c_df)
-    rd_mu, rd_std = per_dataset_mean_std(r_df)
-    c_mu, c_std = per_model_mean_std(c_df)
-    r_mu, r_std = per_model_mean_std(r_df)
+    scaled_df = standardize_scale(runs_df, 'MSE', invert=True)
+    scaled_df = standardize_scale(scaled_df, 'F1_SCORE')
+    c_df, r_df = split_by_type(scaled_df)
+    raw_c_df, raw_r_df = split_by_type(runs_df)
+    c_mu, c_std = per_dataset_mean_std(c_df)
+    r_mu, r_std = per_dataset_mean_std(r_df)
+    c_median, c_iqr = per_model_median_iqr(c_df)
+    r_median, r_iqr = per_model_median_iqr(r_df)
+    raw_c_mu = per_model_mean(raw_c_df)
+    raw_r_mu = per_model_mean(raw_r_df)
     total_dropped_points = drop_d_count*40+drop_r_count*4
 
     print('Missing by Model...\n', missing_df['MODEL'].value_counts())
@@ -418,22 +435,25 @@ def analysis_suite():
                                         total_run_count,
                                         total_dropped_points/total_run_count))
     
-    print('Classification per model means...\n', c_mu)
-    print('Classification per model standard deviation...\n', c_std)
-    print('Regression per model means...\n', r_mu)
-    print('Regression per model standard deviation...\n', r_std)
+    print('Classification per model medians...\n', c_median.round(3))
+    print('Classification per model iqrs...\n', c_iqr.round(3))
+    print('Regression per model medians...\n', r_median.round(3))
+    print('Regression per model iqrs...\n', r_iqr.round(3))
+
+    print('Raw Classification per model means...\n', raw_c_mu.round(3))
+    print('Raw Regression per model means...\n', raw_r_mu.round(3))
 
     print('Creating classification pairwise visualization...')
-    pairwise_comp_viz(cd_mu, target='F1_SCORE')
+    pairwise_comp_viz(c_mu, target='F1_SCORE')
     print('Creating regression pairwise visualization...')
-    pairwise_comp_viz(rd_mu, target='MSE')
+    pairwise_comp_viz(r_mu, target='MSE')
     
     print('Creating dataset visualization...')
-    dataset_viz(runs_df, targets={'classification':['FEATURES','ROWS','CLASSES'],
+    dataset_viz(scaled_df, targets={'classification':['FEATURES','ROWS','CLASSES'],
                                   'regression':['FEATURES','ROWS']}) 
 
     print('Creating metric correlation visualization...')
-    correlation_viz(runs_df, targets={'classification':('F1_SCORE',['DIMENSIONALITY','ROWS']),
+    correlation_viz(scaled_df, targets={'classification':('F1_SCORE',['DIMENSIONALITY','ROWS']),
                                        'regression':('MSE',['DIMENSIONALITY','ROWS'])})
 
     print('Creating classification boxplot visualization...')
