@@ -1,23 +1,11 @@
-# A Benchmark of Automatic Machine Learning Frameworks
-Replicating the results
+# Benchmarking Automatic Machine Learning Frameworks
 
 ## Installation Steps
-1. Create a virtualenv and install required libraries
-  * Note: do this in the repo folder  
 ```bash
 $ virtualenv -p python3 automl_benchmark
 $ source automl_benchmark/bin/activate
 (automl_benchmark) $ pip install -r pre-requirements.txt # Required for auto-sklearn and openml to install correctly
 (automl_benchmark) $ pip install -r requirements.txt
-```
-* TODO: Check if sklearn has fixed multi-class support and update requirements
-2. Clone down openml and follow steps to setup library
-  * Recomendation: create a library repos folder in your home directory  
-```bash
-(automl_benchmark) $ cd
-(automl_benchmark) $ mkdir library_repos; cd library_repos
-(automl_benchmark) $ git clone https://github.com/openml/openml-python.git
-(automl_benchmark) $ cd openml; pip install -e .
 ```
 
 ## Run Get Data
@@ -27,8 +15,5 @@ $ source automl_benchmark/bin/activate
 (automl_benchmark) $ ./get_datasets.py
 ```
 
-## Run the benchmarking
-* TODO
-
-Note: create matplotlib backend workaround note
+Note: For MacOS use TkAgg
 https://github.com/pypa/virtualenv/issues/54#issuecomment-223204279
