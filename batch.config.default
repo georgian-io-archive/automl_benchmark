@@ -1,13 +1,42 @@
 {
-    "job_queue_id" : "JOB_QUEUE_ID",
 
-    "job_definition_id" : "JOB_DEFINITION_ID",
- 
-    "job_name" : "JOB_NAME",
+    "studies": [[130, "regression"],[135, "classification"]],
 
-    "openml_api_key" : "OPENML_KEY",
+    "cores": 2,
 
-    "ecr_repo" : "CONTAINER_REPO_KEY",
+    "memory": 3500,
 
-    "s3_bucket_root" : "S3_URL"
+    "runtime": 10800,
+
+    "hard_limit": 12600,
+
+    "openml_api_key" : "",
+
+    "s3_bucket_root" : "",
+
+    "s3_folder" : "",
+
+    "repo_ssh_key": "",
+
+    "ec2_ssh_key": "",
+
+
+    "job_queue_id" : "",
+
+    "job_definition_id" : "",
+
+    "job_name" : "",
+
+    "ecr_repo" : "",
+
+
+
+    "cluster_image": "ami-14c5486b",
+
+    "ec2_template": "",
+
+    "cluster_size": 100,
+
+    "cluster_type": "c4.xlarge"
+
 }

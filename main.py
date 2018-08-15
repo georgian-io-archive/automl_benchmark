@@ -4,9 +4,6 @@ import argparse
 import pickle
 import sys
 
-from benchmark import analysis
-from benchmark import compute
-
 def local_benchmark(model, d_id, d_type, seed):
     """Use command line args to process single run
     """
@@ -115,4 +112,12 @@ if __name__ == '__main__':
    
     args = parser.parse_args()
     params = list(vars(args).values())
+
+    if len(sys.argv) < 2:
+        parser.print_help()
+        sys.exit(2)
+
+    from benchmark import analysis
+    from benchmark import compute
+
     commands[sys.argv[1]][0](*params) 
