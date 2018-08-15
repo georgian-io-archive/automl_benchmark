@@ -1,6 +1,6 @@
 # AutoML Framework Benchmarking System
 
-##About
+## About
 
 This library was created to perform rigorous benchmarking of machine learning libraries 
 across a wide variety of datasets from OpenML. This framework can easily be extended to test
