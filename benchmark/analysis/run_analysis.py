@@ -183,7 +183,7 @@ def correlation_viz(mu_df, targets):
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
-    plt.savefig('figures/DatasetPerformance.png', dpi=plt.gcf().dpi, transparent=True)
+    plt.savefig('figures/DatasetPerformance.pdf', dpi=plt.gcf().dpi, transparent=True)
     # plt.show()
     
 
@@ -237,7 +237,7 @@ def dataset_viz(mu_df, targets):
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
-    plt.savefig('figures/DatasetShapes.png', dpi=fig.dpi, transparent=True)
+    plt.savefig('figures/DatasetShapes.pdf', dpi=fig.dpi, transparent=True)
     # plt.show()
 
 def pairwise_comp_viz(mu_df, target):
@@ -330,7 +330,7 @@ def pairwise_comp_viz(mu_df, target):
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
-    plt.savefig('figures/DatasetMean{}.png'.format(metric_name.replace(' ', '')), dpi=fig.dpi, 
+    plt.savefig('figures/DatasetMean{}.pdf'.format(metric_name.replace(' ', '')), dpi=fig.dpi, 
                                                                                   transparent=True)
     # plt.show()
 
@@ -352,7 +352,7 @@ def boxplot_viz(clean_df, target):
     plt.setp(bplot['medians'], color='black')
 
     # plt.show()
-    plt.savefig('figures/RawDataBoxPlot{}.png'.format(target), dpi=plt.gcf().dpi, transparent=True)
+    plt.savefig('figures/RawDataBoxPlot{}.pdf'.format(target), dpi=plt.gcf().dpi, transparent=True)
 
 def standardize_scale(runs_df, target, invert=False):
     runs_df = runs_df.copy()
@@ -365,7 +365,7 @@ def standardize_scale(runs_df, target, invert=False):
         runs_df.loc[runs_df['DATASET_ID'] == d_id, target] = 1 - transformation if invert else transformation
     return runs_df
 
-def per_model_median_iqr(runs_df):
+def per_model_median_confidence(runs_df):
     """Computes the grouped median and iqr by model type
     Args: 
         runs_df (pd.Dataframe): A list of all the runs
@@ -376,7 +376,8 @@ def per_model_median_iqr(runs_df):
     overall = runs_df.drop(columns=['SEED', 'ID']).groupby(['TYPE', 'MODEL', 'DATASET_ID'], 
         as_index=False).mean()
     collected = overall.drop(columns=['DATASET_ID']).groupby(['TYPE', 'MODEL'])
-    return collected.median(), collected.quantile(0.75)-collected.quantile(0.25)
+    N = len(runs_df)/4
+    return collected.median(), 1.57*(collected.quantile(0.75)-collected.quantile(0.25))/np.sqrt(N)
 
 def per_model_mean(runs_df):
     """Computes the grouped mean and std by model type
@@ -422,8 +423,8 @@ def analysis_suite():
     raw_c_df, raw_r_df = split_by_type(runs_df)
     c_mu, c_std = per_dataset_mean_std(c_df)
     r_mu, r_std = per_dataset_mean_std(r_df)
-    c_median, c_iqr = per_model_median_iqr(c_df)
-    r_median, r_iqr = per_model_median_iqr(r_df)
+    c_median, c_iqr = per_model_median_confidence(c_df)
+    r_median, r_iqr = per_model_median_confidence(r_df)
     raw_c_mu = per_model_mean(raw_c_df)
     raw_r_mu = per_model_mean(raw_r_df)
     total_dropped_points = drop_d_count*40+drop_r_count*4
