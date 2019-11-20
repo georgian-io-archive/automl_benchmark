@@ -20,10 +20,10 @@ def _save_dataset_data(d_id):
     Args:
         d_id (int): Dataset id
     Returns:
-        A tuple of dataset features (dataset id, 
-                                     dataset name, 
-                                     number of rows, 
-                                     number of features, 
+        A tuple of dataset features (dataset id,
+                                     dataset name,
+                                     number of rows,
+                                     number of features,
                                      number of classes)
     """
     d = openml.datasets.get_dataset(d_id)
@@ -39,7 +39,7 @@ def _save_dataset_data(d_id):
     df = pd.DataFrame(df_dict)
 
     # Build categories df
-    types_df = pd.DataFrame([(n, 'categorical' if t else 'numerical') for n, t in zip(col_names, 
+    types_df = pd.DataFrame([(n, 'categorical' if t else 'numerical') for n, t in zip(col_names,
                                                                                       col_types)],
                              columns=['NAME', 'TYPE'])
     types_df.loc[len(types_df)] = ['target', 'target']
@@ -64,6 +64,8 @@ def _get_study(s_id, s_name):
 
     print('Getting data for study: {}'.format(s_name))
     for d_id in tqdm(benchmark_study.data):
+        if d_id in (495, 565):  # OpenML Dataset IDs which return empty results
+            continue
         tqdm.write('Getting dataset ({})'.format(d_id))
         dataset_info.append(_save_dataset_data(d_id))
 
@@ -117,4 +119,4 @@ def single_dataset(d_id, use_cache=False):
     if not use_cache:
         _save_dataset_data(d_id)
     else:
-        _get_from_s3(d_id) 
+        _get_from_s3(d_id)

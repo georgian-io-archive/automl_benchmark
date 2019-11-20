@@ -1,3 +1,4 @@
+boto3==1.10.9
 colour==0.1.5
 cycler==0.10.0
 jmespath==0.9.3
