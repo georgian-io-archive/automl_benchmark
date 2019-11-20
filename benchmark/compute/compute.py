@@ -19,7 +19,7 @@ def benchmark(get_tests):
     execute_methods(get_tests)
 
 def sample_run(nums, models):
-    
+
     def get_partial():
         fail = get_failures()
         runs = []
@@ -32,7 +32,7 @@ def sample_run(nums, models):
 def resume():
     """Resumes process and restarts failed tasks"""
     benchmark(get_failures)
-    
+
 def execute_list(ls):
     """Executes benchmarking on specific list
     """
@@ -67,14 +67,14 @@ def get_failures():
     """
 
     paginator = client.get_paginator('list_objects_v2')
-    pages = paginator.paginate(Bucket=s3_bucket, Prefix=s3_folder + "out/", 
+    pages = paginator.paginate(Bucket=s3_bucket, Prefix=s3_folder + "out/",
                                  PaginationConfig={"MaxItems":len(data), "PageSize":len(data)})
 
     prefix_length = len(s3_folder + "out/")
 
     keys = []
 
-    for p in pages: 
+    for p in pages:
         #Extracts indicies from filenames
         try:
             keys += [ int(k["Key"][7 + prefix_length:-4]) for k in p["Contents"] ]
@@ -113,7 +113,7 @@ def delete_runs(fname):
 
     x = pickle.load(open(fname, 'rb'))
     ids = [x[0] for v in x]
-    
+
     for idx in tqdm(ids):
           try:
               delete_file(idx)

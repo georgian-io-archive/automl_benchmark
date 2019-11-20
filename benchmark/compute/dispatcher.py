@@ -28,7 +28,7 @@ class AutoMLMethods(object):
                 filtered_tests = [x for x in get_tests() if x[1] in methods]
                 return filtered_tests
         return Wrapped
-                
+
 
 class Register(type):
     def __new__(meta, name, bases, class_dict):
@@ -41,7 +41,7 @@ class Dispatcher(object, metaclass=Register):
     @classmethod
     def process(cls,tests):
         raise NotImplementedError("Function not implemented")
-        
+
     @staticmethod
     def filter(get_tests):
         raise NotImplementedError("Function not implemented")
@@ -49,4 +49,4 @@ class Dispatcher(object, metaclass=Register):
     @classmethod
     def execute(cls, get_tests):
         cls.process(cls.filter(get_tests))
-        
+

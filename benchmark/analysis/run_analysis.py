@@ -41,7 +41,7 @@ def square_fac(n):
 def compute_missing_runs(runs_df):
     """Computes the runs which don't have results
     Args:
-        runs_df (pd.Dataframe): A list of all the runs 
+        runs_df (pd.Dataframe): A list of all the runs
     Returns:
         A pandas dataframe of all the missing runs
     """
@@ -59,7 +59,7 @@ def compute_missing_runs(runs_df):
     return missing_df, len(tests)
 
 def drop_missing_datasets(runs_df, missing_df, missing_thresh):
-    """If a dataset is missing more than or equal to the missing_thresh for a specific combination of 
+    """If a dataset is missing more than or equal to the missing_thresh for a specific combination of
        model and dataset, the dataset and its data is dropped from all models
     Args:
         runs_df (pd.Dataframe): A list of all computed runs
@@ -84,13 +84,13 @@ def drop_missing_runs(runs_df, missing_df):
     Args:
         missing_df (pd.Dataframe): A list of all missing runs
     Returns:
-        A index list 
+        A index list
     """
     drop_tuples = list(set(missing_df.set_index(['DATASET_ID', 'SEED']).index.values.tolist()))
     dataset_missing = pd.DataFrame(drop_tuples, columns=['DATASET_ID', 'SEED'])['DATASET_ID'].value_counts()
     runs_df = runs_df.set_index(['DATASET_ID', 'SEED'])
     runs_df = runs_df.drop(index=drop_tuples).reset_index()
-    runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'MSE', 'R2_SCORE', 'LOGLOSS', 
+    runs_df = runs_df[['ID', 'MODEL', 'DATASET_ID', 'TYPE', 'SEED', 'MSE', 'R2_SCORE', 'LOGLOSS',
                        'F1_SCORE']]
 
     return runs_df, len(drop_tuples)
@@ -115,7 +115,7 @@ def data_distributions(data_df, target):
     plt.show()
 
 def correlation_viz(mu_df, targets):
-    """Creates scatterplots of correlation betwene dataset stats and model performance 
+    """Creates scatterplots of correlation betwene dataset stats and model performance
     Args:
         mu_df (pd.DataFrame): A dataframe holding all failures
         targets (dict(str,list(str))): Column names from mu_df to perform analysis on
@@ -132,25 +132,25 @@ def correlation_viz(mu_df, targets):
 
         df_types_num = df_types.loc[df_types['TYPE'] == 'numerical']['NAME']
         df_num = df[df.columns.intersection(df_types_num.values)]
-        
+
         count = np.sum(uniques) + len(df_num.columns)
 
         return count
 
-    plt.gcf().set_size_inches(20, 15)  
+    plt.gcf().set_size_inches(20, 15)
     meta_c_df = pd.read_csv('datasets/study_classification_info.csv')
     meta_r_df = pd.read_csv('datasets/study_regression_info.csv')
     meta_df = pd.concat([meta_c_df, meta_r_df])
     meta_df['DIMENSIONALITY'] = meta_df.apply(lambda row: get_true_features(row['DATASET_ID']), axis=1)
-    full_data = pd.merge(mu_df, meta_df, how='left')    
+    full_data = pd.merge(mu_df, meta_df, how='left')
     models = full_data['MODEL'].unique()
 
     row_size = max([len(x) for x in targets.values()])
     base_colors = [hsl2hex(c) for c in color_scale((0., 0.8, 0.6), (0.8, 0.8, 0.6), len(models))]
     lines = None
     for j, TYPE in enumerate(targets):
-        for i, BASE in enumerate(targets[TYPE][1]): 
-     
+        for i, BASE in enumerate(targets[TYPE][1]):
+
             all_data = full_data.loc[full_data['TYPE'] == TYPE]
             all_data = all_data[['MODEL','DATASET_ID',BASE,targets[TYPE][0]]]
             all_data = all_data.groupby(['MODEL','DATASET_ID',BASE], as_index=False).mean()
@@ -163,7 +163,7 @@ def correlation_viz(mu_df, targets):
                 label_str = 'standardized negated mse'
 
             plt.xlabel(BASE.replace('_',' ').capitalize())
-            plt.ylabel("{} {}".format(TYPE.replace('_',' ').capitalize(), 
+            plt.ylabel("{} {}".format(TYPE.replace('_',' ').capitalize(),
                                       ylabel_str.replace('_',' ').capitalize()))
             local_lines = []
             for k, m in enumerate(models):
@@ -177,15 +177,15 @@ def correlation_viz(mu_df, targets):
                 local_lines.append(line)
             if lines == None:
                 lines = local_lines
-    
+
     plt.figlegend(lines, models, fancybox=True, framealpha=0.0)
-    plt.gcf().suptitle('Dataset Dependent Performance Analysis') 
+    plt.gcf().suptitle('Dataset Dependent Performance Analysis')
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
     plt.savefig('figures/DatasetPerformance.pdf', dpi=plt.gcf().dpi, transparent=True)
     # plt.show()
-    
+
 
 def dataset_viz(mu_df, targets):
     """Creates histograms for given dataset, type filter and targets
@@ -214,18 +214,18 @@ def dataset_viz(mu_df, targets):
     base_colors = [hsl2hex(c) for c in color_scale((0., 0.8, 0.6), (0.8, 0.8, 0.6), row_size)]
 
     for j, TYPE in enumerate(targets):
-        for i, BASE in enumerate(targets[TYPE]):             
-            all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')   
+        for i, BASE in enumerate(targets[TYPE]):
+            all_data = pd.merge(mu_df.loc[mu_df['TYPE']==TYPE], meta_df, how='left')
             full_data = pd.merge(mu_df, meta_df, how='left')
 
             ax = axes_list[j][i]
             ax.set_xlabel(BASE.capitalize() + " Count (Log Scale)")
             ax.set_ylabel("{} Frequency".format(BASE.capitalize()))
-            counts, bins, bars = ax.hist(all_data[BASE], 
-                                         bins=np.logspace(np.log10(np.min(full_data[BASE])), 
-                                                          np.log10(np.max(full_data[BASE])), 
-                                                          30), 
-                                         stacked=True, 
+            counts, bins, bars = ax.hist(all_data[BASE],
+                                         bins=np.logspace(np.log10(np.min(full_data[BASE])),
+                                                          np.log10(np.max(full_data[BASE])),
+                                                          30),
+                                         stacked=True,
                                          color=base_colors[i],
                                          alpha=0.7,
                                          edgecolor='black',
@@ -255,7 +255,7 @@ def pairwise_comp_viz(mu_df, target):
         # difference from y=x color mapping (not magnitude because independent)
         colors = np.array([m_2 - m_1 for m_2, m_1 in zip(m2_values, m1_values)])
 
-        sc = ax.scatter(m1_values, m2_values, alpha=0.7, s=15, c=colors, cmap=cmap, zorder=10, 
+        sc = ax.scatter(m1_values, m2_values, alpha=0.7, s=15, c=colors, cmap=cmap, zorder=10,
             norm=MidpointNormalize(vmin=vmin, vmax=vmax, midpoint=0))
         ax.set_xlabel(m1)
         ax.set_ylabel(m2)
@@ -286,7 +286,7 @@ def pairwise_comp_viz(mu_df, target):
         color_range = [c.hex_l for c in (c1_bins + c2_bins)]
         return color_range
 
-    sort_order = {'auto-sklearn': 1, 'tpot': 2, 'h2o': 3, 'auto_ml': 4}
+    sort_order = {'auto_sklearn': 1, 'tpot': 2, 'h2o': 3, 'auto_ml': 4}
     mu_df = mu_df[target]
     models = sorted(pd.unique(mu_df.index.get_level_values('MODEL').values), key=lambda x: sort_order[x])
     combos = list(itertools.combinations(models, 2))
@@ -330,7 +330,7 @@ def pairwise_comp_viz(mu_df, target):
 
     if not os.path.exists('figures'):
         os.makedirs('figures')
-    plt.savefig('figures/DatasetMean{}.pdf'.format(metric_name.replace(' ', '')), dpi=fig.dpi, 
+    plt.savefig('figures/DatasetMean{}.pdf'.format(metric_name.replace(' ', '')), dpi=fig.dpi,
                                                                                   transparent=True)
     # plt.show()
 
@@ -367,13 +367,13 @@ def standardize_scale(runs_df, target, invert=False):
 
 def per_model_median_confidence(runs_df):
     """Computes the grouped median and iqr by model type
-    Args: 
+    Args:
         runs_df (pd.Dataframe): A list of all the runs
     Returns:
         A tuple of pandas Dataframes that represent the median and iqr of each model
     """
 
-    overall = runs_df.drop(columns=['SEED', 'ID']).groupby(['TYPE', 'MODEL', 'DATASET_ID'], 
+    overall = runs_df.drop(columns=['SEED', 'ID']).groupby(['TYPE', 'MODEL', 'DATASET_ID'],
         as_index=False).mean()
     collected = overall.drop(columns=['DATASET_ID']).groupby(['TYPE', 'MODEL'])
     N = len(runs_df)/4
@@ -381,13 +381,13 @@ def per_model_median_confidence(runs_df):
 
 def per_model_mean(runs_df):
     """Computes the grouped mean and std by model type
-    Args: 
+    Args:
         runs_df (pd.Dataframe): A list of all the runs
     Returns:
         A tuple of pandas Dataframes that represent the mean and std of each model
     """
 
-    overall = runs_df.drop(columns=['SEED', 'ID']).groupby(['TYPE', 'MODEL', 'DATASET_ID'], 
+    overall = runs_df.drop(columns=['SEED', 'ID']).groupby(['TYPE', 'MODEL', 'DATASET_ID'],
         as_index=False).mean()
     collected = overall.drop(columns=['DATASET_ID']).groupby(['TYPE', 'MODEL'])
     return collected.mean()
@@ -395,7 +395,7 @@ def per_model_mean(runs_df):
 
 def per_dataset_mean_std(runs_df):
     """Computes the overall mean and median of each dataset grouped by model
-    Args: 
+    Args:
         runs_df (pd.Dataframe): A list of all the runs
     Returns:
         A tuple of pandas Dataframes that represent the mean and variance of each dataset by model
@@ -435,7 +435,7 @@ def analysis_suite():
     print('percentage {}/{}: {}'.format(total_dropped_points,
                                         total_run_count,
                                         total_dropped_points/total_run_count))
-    
+
     print('Classification per model medians...\n', c_median.round(3))
     print('Classification per model iqrs...\n', c_iqr.round(3))
     print('Regression per model medians...\n', r_median.round(3))
@@ -448,10 +448,10 @@ def analysis_suite():
     pairwise_comp_viz(c_mu, target='F1_SCORE')
     print('Creating regression pairwise visualization...')
     pairwise_comp_viz(r_mu, target='MSE')
-    
+
     print('Creating dataset visualization...')
     dataset_viz(scaled_df, targets={'classification':['FEATURES','ROWS','CLASSES'],
-                                  'regression':['FEATURES','ROWS']}) 
+                                  'regression':['FEATURES','ROWS']})
 
     print('Creating metric correlation visualization...')
     correlation_viz(scaled_df, targets={'classification':('F1_SCORE',['DIMENSIONALITY','ROWS']),

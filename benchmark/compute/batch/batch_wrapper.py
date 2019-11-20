@@ -52,15 +52,15 @@ def execute():
     csv = (','.join(map(str,results))+'\n').encode("utf-8")
     key = (s3_folder+"out/"+"results" + str(runid) +".csv")
     s3.Bucket(s3_bucket).put_object(Key=key, Body = csv)
-    
+
     key = '{}logs/pass/{}/{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
-    open('status', 'w').write(key) 
+    open('status', 'w').write(key)
 
 if __name__ == '__main__':
     try:
         execute()
     except Exception as e:
-        
+
         s3 = boto3.resource('s3')
         batch_id = int(os.environ["AWS_BATCH_JOB_ARRAY_INDEX"])
         s3_bucket = os.environ["S3_BUCKET"]
@@ -79,4 +79,4 @@ if __name__ == '__main__':
         print(e)
 
         key = '{}logs/fail/{}/{}-{}-{}'.format(s3_folder, model, dataset, dtype, seed)
-        open('status', 'w').write(key) 
+        open('status', 'w').write(key)
