@@ -5,7 +5,7 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk /dev/xvdb
   n # new partition
   p # primary partition
   1 # partition number 1
-    # default - start at beginning of disk 
+    # default - start at beginning of disk
     # default - go to end of disk
   t # change type
  82 # set type to swap
@@ -29,7 +29,7 @@ export PATH=$PATH:/usr/local/bin
 ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/cc1plus
 aws s3 cp s3://${S3_BUCKET}/${S3_FOLDER}swig.tar.gz ~/swig-3.0.12.tar.gz
 tar xf /root/swig-3.0.12.tar.gz -C /root/
-cd /root/swig-3.0.12 
+cd /root/swig-3.0.12
 ./configure --prefix=/usr --without-clisp --without-maximum-compile-warnings
 make
 make install
@@ -37,7 +37,7 @@ cd /root/
 
 #Clone down repository
 export GIT_SSH_COMMAND="ssh -F /root/.ssh/git -o StrictHostKeyChecking=no"
-git clone repo:georgianpartners/automl_benchmark automl_benchmark
+git clone https://github.com/georgianpartners/automl_benchmark.git
 cd  automl_benchmark
 
 #Setup virtual environment

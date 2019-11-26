@@ -15,7 +15,7 @@ chmod 755 ~/.ssh/batch
 ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/cc1plus
 aws s3 cp s3://${S3_BUCKET}/${S3_FOLDER}swig.tar.gz ~/swig-3.0.12.tar.gz
 tar xf ~/swig-3.0.12.tar.gz -C ~/
-cd ~/swig-3.0.12 
+cd ~/swig-3.0.12
 ./configure --prefix=/usr --without-clisp --without-maximum-compile-warnings
 make
 make install
@@ -23,7 +23,7 @@ cd ~
 
 #Clone down repository
 export GIT_SSH_COMMAND="ssh -F /root/.ssh/git -o StrictHostKeyChecking=no"
-git clone repo:georgianpartners/automl_benchmark automl_benchmark
+git clone https://github.com/georgianpartners/automl_benchmark.git
 cd  automl_benchmark
 
 #Setup virtual environment
